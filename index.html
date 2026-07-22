@@ -88,18 +88,8 @@
     </div>
   </div>
 
-  <!-- Mobile gate: shown on phones / narrow (mobile) viewports -->
-  <div id="mobile-gate" class="mobile-gate">
-    <div class="mg-inner">
-      <div class="mg-mark">N</div>
-      <div class="mg-title">NomuOS</div>
-      <div class="mg-emoji">🖥️</div>
-      <h1 class="mg-head">Best on a PC or laptop</h1>
-      <p class="mg-text">This version can only be viewed on a desktop or laptop.
-        It's not available on mobile.</p>
-      <p class="mg-sub">Please open <b>nomuos.imronaldmendoza.com</b> on a larger screen. 💻</p>
-    </div>
-  </div>
+  <!-- Mobile shell (iOS-style) — built by js/mobile.js on mobile/narrow viewports -->
+  <div id="mobile" class="mobile hidden"></div>
 
   <!-- Scripts (plain scripts so index.html works via file://) -->
   <script src="js/data/profile.js"></script>
@@ -117,6 +107,7 @@
   <script src="js/apps/terminal.js"></script>
   <script src="js/widgets.js"></script>
   <script src="js/desktop.js"></script>
+  <script src="js/mobile.js"></script>
   <script src="js/boot.js"></script>
 </body>
 </html>

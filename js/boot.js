@@ -5,10 +5,26 @@ window.NomuBoot = (function () {
   var BOOT_MS = 2600;
   var initialized = false;
 
-  // Real mobile/touch devices: don't boot the OS at all — show the gate.
+  // Real mobile/touch devices OR narrow (mobile) viewports use the mobile shell.
   function isMobileDevice() {
     var ua = navigator.userAgent || "";
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+  }
+  function isMobileView() {
+    var w = window.innerWidth || document.documentElement.clientWidth || 0;
+    return isMobileDevice() || w <= 820;
+  }
+
+  var _mobileMode = null;
+  function watchViewport() {
+    var t;
+    window.addEventListener("resize", function () {
+      clearTimeout(t);
+      t = setTimeout(function () {
+        // Reload only when we cross the desktop/mobile boundary.
+        if (isMobileView() !== _mobileMode) location.reload();
+      }, 300);
+    });
   }
 
   function showDesktop() {
@@ -28,11 +44,16 @@ window.NomuBoot = (function () {
   }
 
   function boot() {
-    // On phones/tablets, skip the OS entirely and show the desktop-only notice.
-    if (isMobileDevice()) {
+    _mobileMode = isMobileView();
+    watchViewport();
+
+    // Mobile: launch the iOS-style shell instead of the desktop OS.
+    if (_mobileMode) {
       document.documentElement.classList.add("is-mobile");
+      try { if (window.NomuMobile) NomuMobile.init(); } catch (e) {}
       return;
     }
+
     // apply saved theme early so the boot screen matches
     try { NomuTheme.apply(); } catch (e) {}
     var boot = document.getElementById("boot-screen");

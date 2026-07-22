@@ -40,6 +40,10 @@ window.NomuWM = (function () {
    * returns window handle { id, el, body, close, setTitle }
    */
   function open(opts) {
+    // On mobile, present the app fullscreen via the iOS-style shell instead.
+    if (window.NomuMobile && NomuMobile.isActive()) {
+      return NomuMobile.presentApp(opts || {});
+    }
     opts = opts || {};
     var id = ++idCounter;
     var width = opts.width || 520;
