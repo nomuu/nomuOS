@@ -61,7 +61,11 @@ window.NomuDesktop = (function () {
   function buildStartMenu() {
     var host = document.getElementById("start-apps");
     host.innerHTML = "";
-    apps().slice(0, 5).forEach(function (app) {
+    // Start menu shows the first 5 apps plus Settings (6 total).
+    var startApps = apps().slice(0, 5);
+    var settings = window.NomuApps.settings;
+    if (settings && startApps.indexOf(settings) === -1) startApps.push(settings);
+    startApps.forEach(function (app) {
       var el = document.createElement("button");
       el.className = "start-app";
       el.innerHTML = '<span class="glyph">' + app.icon + '</span><span class="label"></span>';
