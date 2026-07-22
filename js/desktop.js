@@ -3,7 +3,7 @@ window.NomuDesktop = (function () {
   "use strict";
 
   // Apps shown on desktop and start menu (in order)
-  var APP_ORDER = ["about", "skills", "contact", "browie", "terminal", "files", "editor", "calc", "paint", "settings"];
+  var APP_ORDER = ["about", "skills", "contact", "browie", "terminal", "files", "editor", "calc", "paint", "calendar", "settings"];
 
   function apps() {
     return APP_ORDER
@@ -318,6 +318,17 @@ window.NomuDesktop = (function () {
 
     var viewAll = document.getElementById("start-viewall");
     if (viewAll) viewAll.addEventListener("click", function (e) { e.stopPropagation(); openAllApps(); });
+
+    // Clicking the taskbar clock opens the Calendar app.
+    var clockEl = document.getElementById("clock");
+    if (clockEl) {
+      clockEl.classList.add("clickable");
+      clockEl.title = "Open Calendar";
+      clockEl.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (window.NomuApps && NomuApps.calendar) launch("calendar");
+      });
+    }
 
     var aaClose = document.getElementById("aa-close");
     if (aaClose) aaClose.addEventListener("click", closeAllApps);

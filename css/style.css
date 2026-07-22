@@ -1365,3 +1365,113 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
   font-size: 13px;
   padding: 18px 0;
 }
+
+
+/* ============================================================
+   Calendar app
+   ============================================================ */
+.cal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 10px;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cal-nav {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+.cal-nav:hover { background: rgba(255, 255, 255, 0.08); }
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-wd {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.cal-grid { flex: 1; }
+
+.cal-day {
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+.cal-day:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+.cal-day:active:not(:disabled) { transform: scale(0.94); }
+
+.cal-day.muted {
+  color: var(--text-dim);
+  opacity: 0.35;
+  background: transparent;
+}
+
+.cal-day.today {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.cal-day.selected {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 700;
+}
+
+.cal-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--stroke);
+  padding-top: 8px;
+}
+
+.cal-selected {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+
+/* Clickable taskbar clock (opens Calendar) */
+.clock.clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  transition: background 0.15s ease;
+}
+.clock.clickable:hover { background: rgba(255, 255, 255, 0.1); }
