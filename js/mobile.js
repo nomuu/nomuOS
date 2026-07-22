@@ -23,6 +23,7 @@ window.NomuMobile = (function () {
     { type: "app", id: "files" },
     { type: "app", id: "editor" },
     { type: "app", id: "calc" },
+    { type: "app", id: "paint" },
     { type: "app", id: "terminal" },
     { type: "app", id: "settings" },
   ];

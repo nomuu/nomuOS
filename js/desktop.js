@@ -3,7 +3,7 @@ window.NomuDesktop = (function () {
   "use strict";
 
   // Apps shown on desktop and start menu (in order)
-  var APP_ORDER = ["about", "skills", "contact", "browie", "terminal", "files", "editor", "calc", "settings"];
+  var APP_ORDER = ["about", "skills", "contact", "browie", "terminal", "files", "editor", "calc", "paint", "settings"];
 
   function apps() {
     return APP_ORDER

@@ -76,6 +76,9 @@ window.NomuApps.files = {
 
             el.addEventListener("dblclick", function () {
               if (it.type === "folder") { goTo(full); }
+              else if (/\.(png|jpg|jpeg|gif|svg)$/i.test(it.name) && window.NomuApps.paint) {
+                NomuApps.paint.open(full);
+              }
               else { NomuApps.editor.open(full); }
             });
 

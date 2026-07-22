@@ -9,7 +9,7 @@
 window.NomuFS = (function () {
   "use strict";
 
-  var STORAGE_KEY = "nomuos.fs.v4";
+  var STORAGE_KEY = "nomuos.fs.v5";
 
   // Build one folder per project (with a details.txt) from the profile data.
   function buildProjectFolders() {
@@ -106,6 +106,18 @@ window.NomuFS = (function () {
             projects: {
               type: "folder",
               children: buildProjectFolders(),
+            },
+          },
+        },
+        paint: {
+          type: "folder",
+          children: {
+            "readme.txt": {
+              type: "file",
+              content:
+                "This is C:\\paint — your Paint app saves drawings here.\n" +
+                "Open the Paint app, draw something, then hit Save.\n" +
+                "Double-click a .png here to reopen it in Paint.\n",
             },
           },
         },
