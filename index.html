@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NomuOS</title>
+  <script>
+    /* Detect mobile as early as possible so the correct boot shows with no flash. */
+    (function () {
+      try {
+        var w = window.innerWidth || document.documentElement.clientWidth || 0;
+        var m = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent || "") || w <= 820;
+        if (m) document.documentElement.className += " is-mobile";
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -90,6 +100,12 @@
 
   <!-- Mobile shell (iOS-style) — built by js/mobile.js on mobile/narrow viewports -->
   <div id="mobile" class="mobile hidden"></div>
+
+  <!-- iOS-style boot for mobile (black screen, centered logo, thin progress bar) -->
+  <div id="m-boot" class="m-boot">
+    <div class="m-boot-logo">N</div>
+    <div class="m-boot-progress"><div class="m-boot-bar"></div></div>
+  </div>
 
   <!-- Scripts (plain scripts so index.html works via file://) -->
   <script src="js/data/profile.js"></script>

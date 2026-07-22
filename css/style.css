@@ -789,8 +789,29 @@ a.wg-proj:hover { border-color: var(--accent); background: rgba(124,92,255,0.12)
    ============================================================ */
 #mobile.mobile { display: none; }
 html.is-mobile #mobile.mobile { display: block; }
-html.is-mobile #boot-screen,
-html.is-mobile #desktop { display: none !important; }
+html.is-mobile #desktop,
+html.is-mobile #boot-screen { display: none !important; }
+
+/* iOS-style mobile boot */
+.m-boot { display: none; position: fixed; inset: 0; z-index: 100000; background: #000; }
+html.is-mobile #m-boot {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+html.is-mobile #m-boot.gone { display: none !important; }
+.m-boot.out { animation: mBootFade 0.45s ease forwards; }
+.m-boot-logo {
+  color: #fff; font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: 1px;
+  text-shadow: 0 0 40px rgba(255,255,255,0.25);
+}
+.m-boot-progress {
+  position: absolute; bottom: 13%; left: 50%; transform: translateX(-50%);
+  width: 160px; height: 4px; border-radius: 999px;
+  background: rgba(255,255,255,0.22); overflow: hidden;
+}
+.m-boot-bar { height: 100%; width: 0; background: #fff; border-radius: 999px; }
+html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
+@keyframes mBootLoad { from { width: 0; } to { width: 100%; } }
+@keyframes mBootFade { to { opacity: 0; visibility: hidden; } }
 
 .mobile {
   position: fixed; inset: 0; overflow: hidden;

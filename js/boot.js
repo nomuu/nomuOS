@@ -43,14 +43,25 @@ window.NomuBoot = (function () {
     }, 550);
   }
 
+  function showMobile() {
+    var mb = document.getElementById("m-boot");
+    if (mb) mb.classList.add("out");
+    setTimeout(function () {
+      if (mb) { mb.classList.add("gone"); mb.classList.remove("out"); }
+      try { if (window.NomuMobile) NomuMobile.init(); } catch (e) {}
+    }, 450);
+  }
+
   function boot() {
     _mobileMode = isMobileView();
     watchViewport();
 
-    // Mobile: launch the iOS-style shell instead of the desktop OS.
+    // Mobile: the iOS-style boot (#m-boot) is already visible via .is-mobile;
+    // let it play, then launch the mobile shell.
     if (_mobileMode) {
       document.documentElement.classList.add("is-mobile");
-      try { if (window.NomuMobile) NomuMobile.init(); } catch (e) {}
+      try { NomuTheme.apply(); } catch (e) {}
+      setTimeout(showMobile, BOOT_MS);
       return;
     }
 
