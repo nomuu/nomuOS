@@ -1094,3 +1094,73 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
   font-size: 13px; color: var(--text-dim); letter-spacing: 0.5px;
   margin-top: 2px;
 }
+
+
+/* ============================================================
+   Mobile lock screen (6-digit PIN, iOS-style)
+   ============================================================ */
+.m-lock {
+  position: absolute; inset: 0; z-index: 90;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 54px 24px 30px;
+  background:
+    radial-gradient(700px 600px at 30% 12%, rgba(124, 92, 255, 0.30), transparent 60%),
+    radial-gradient(600px 500px at 80% 88%, rgba(33, 212, 253, 0.20), transparent 60%),
+    linear-gradient(160deg, #06070f, #0d1024);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.m-lock.in { opacity: 1; }
+
+.m-lock-clock { text-align: center; margin-bottom: 8px; }
+.m-lock-time { display: block; font-size: 40px; font-weight: 300; letter-spacing: 1px; }
+.m-lock-date { display: block; font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
+.m-lock-avatar {
+  display: none;
+}
+.m-lock-title { font-size: 16px; font-weight: 600; margin: 12px 0 18px; }
+
+/* PIN dots */
+.m-pin { display: flex; gap: 18px; margin-bottom: 34px; }
+.m-pin-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background: transparent; transition: background 0.12s, transform 0.12s;
+}
+.m-pin-dot.filled { background: #fff; transform: scale(1.05); }
+.m-pin.shake { animation: mPinShake 0.4s ease; }
+@keyframes mPinShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-7px); }
+  80% { transform: translateX(7px); }
+}
+
+/* Round keypad */
+.m-keys {
+  display: grid; grid-template-columns: repeat(3, 72px);
+  gap: 22px 26px; justify-content: center; align-items: center;
+}
+.m-key {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--text);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1; gap: 2px;
+  transition: transform 0.08s, background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-key:active { transform: scale(0.92); background: rgba(255, 255, 255, 0.22); }
+.m-key-n { font-size: 28px; font-weight: 400; }
+.m-key-s { font-size: 9px; letter-spacing: 1px; color: var(--text-dim); min-height: 10px; }
+.m-key-spacer { width: 72px; height: 72px; }
+.m-key-del {
+  border: none; background: transparent; font-size: 24px;
+}
+.m-key-del:active { transform: scale(0.92); background: transparent; }
+
+.m-lock-hint { margin-top: 26px; font-size: 12px; color: var(--text-dim); letter-spacing: 0.5px; }

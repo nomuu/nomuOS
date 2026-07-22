@@ -169,6 +169,109 @@ window.NomuMobile = (function () {
     setInterval(tick, 15000);
   }
 
+  /* ---------------- Lock screen (6-digit PIN) ---------------- */
+  var LOCK_PIN = "123098";
+  var PIN_LEN = 6;
+  var lockEl = null, pinEntered = "", lockClockTimer = null;
+
+  function buildLock() {
+    if (lockEl) return;
+    lockEl = document.createElement("div");
+    lockEl.className = "m-lock hidden";
+
+    var dots = "";
+    for (var i = 0; i < PIN_LEN; i++) dots += '<span class="m-pin-dot"></span>';
+
+    var keys = [
+      { n: "1", s: " " }, { n: "2", s: "A B C" }, { n: "3", s: "D E F" },
+      { n: "4", s: "G H I" }, { n: "5", s: "J K L" }, { n: "6", s: "M N O" },
+      { n: "7", s: "P Q R S" }, { n: "8", s: "T U V" }, { n: "9", s: "W X Y Z" },
+    ];
+    var keyHtml = keys.map(function (k) {
+      return '<button class="m-key" data-n="' + k.n + '">' +
+               '<span class="m-key-n">' + k.n + '</span>' +
+               '<span class="m-key-s">' + k.s + '</span>' +
+             '</button>';
+    }).join("");
+    keyHtml +=
+      '<span class="m-key-spacer"></span>' +
+      '<button class="m-key" data-n="0"><span class="m-key-n">0</span></button>' +
+      '<button class="m-key m-key-del" data-del="1">⌫</button>';
+
+    lockEl.innerHTML =
+      '<div class="m-lock-clock" id="m-lock-clock"></div>' +
+      '<div class="m-lock-title">Enter Passcode</div>' +
+      '<div class="m-pin" id="m-pin">' + dots + "</div>" +
+      '<div class="m-keys">' + keyHtml + "</div>" +
+      '<div class="m-lock-hint">please use 123098</div>';
+
+    root.appendChild(lockEl);
+
+    lockEl.querySelectorAll(".m-key").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        if (btn.getAttribute("data-del")) delPin();
+        else addPin(btn.getAttribute("data-n"));
+      });
+    });
+  }
+
+  function renderDots() {
+    if (!lockEl) return;
+    var dots = lockEl.querySelectorAll(".m-pin-dot");
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle("filled", i < pinEntered.length);
+    }
+  }
+
+  function addPin(n) {
+    if (pinEntered.length >= PIN_LEN) return;
+    pinEntered += n;
+    renderDots();
+    if (pinEntered.length === PIN_LEN) setTimeout(checkPin, 140);
+  }
+  function delPin() {
+    pinEntered = pinEntered.slice(0, -1);
+    renderDots();
+  }
+  function checkPin() {
+    if (pinEntered === LOCK_PIN) {
+      unlock();
+    } else {
+      var pin = lockEl && lockEl.querySelector("#m-pin");
+      if (pin) { pin.classList.remove("shake"); void pin.offsetWidth; pin.classList.add("shake"); }
+      pinEntered = "";
+      renderDots();
+    }
+  }
+
+  function lockClockTick() {
+    var el = lockEl && lockEl.querySelector("#m-lock-clock");
+    if (!el) return;
+    var d = new Date();
+    var time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    var date = d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    el.innerHTML = '<span class="m-lock-time">' + time + '</span><span class="m-lock-date">' + date + "</span>";
+  }
+
+  function lock() {
+    if (!root) return;
+    buildLock();
+    pinEntered = "";
+    renderDots();
+    lockEl.classList.remove("hidden");
+    requestAnimationFrame(function () { if (lockEl) lockEl.classList.add("in"); });
+    lockClockTick();
+    clearInterval(lockClockTimer);
+    lockClockTimer = setInterval(lockClockTick, 15000);
+  }
+
+  function unlock() {
+    if (!lockEl) return;
+    lockEl.classList.remove("in");
+    clearInterval(lockClockTimer); lockClockTimer = null;
+    setTimeout(function () { if (lockEl) lockEl.classList.add("hidden"); }, 350);
+  }
+
   /* ---------------- Init ---------------- */
   function init() {
     root = document.getElementById("mobile");
@@ -215,5 +318,6 @@ window.NomuMobile = (function () {
     isActive: isActive,
     presentApp: presentApp,
     closeTop: closeTop,
+    lock: lock,
   };
 })();

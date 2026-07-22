@@ -169,14 +169,16 @@ window.NomuScreensaver = (function () {
     if (ms > 0) timer = setTimeout(show, ms);
   }
 
-  // Waking from the screensaver: on the desktop we require the password
-  // (show the lock screen) instead of dropping straight to the desktop.
-  // On mobile there is no lock screen, so we simply dismiss.
+  // Waking from the screensaver: require the passcode instead of dropping
+  // straight to the home screen. Desktop uses its password lock screen;
+  // mobile uses its 6-digit PIN lock screen.
   function wake() {
     if (!active) return;
     hide();
     var onMobile = !!(window.NomuMobile && NomuMobile.isActive());
-    if (!onMobile && window.NomuDesktop && typeof NomuDesktop.lock === "function") {
+    if (onMobile) {
+      if (window.NomuMobile && typeof NomuMobile.lock === "function") NomuMobile.lock();
+    } else if (window.NomuDesktop && typeof NomuDesktop.lock === "function") {
       NomuDesktop.lock();
     }
   }
