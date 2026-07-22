@@ -1102,7 +1102,8 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
 .m-lock {
   position: absolute; inset: 0; z-index: 90;
   display: flex; flex-direction: column; align-items: center;
-  padding: 54px 24px 30px;
+  padding: 40px 24px 24px;
+  overflow-y: auto;
   background:
     radial-gradient(700px 600px at 30% 12%, rgba(124, 92, 255, 0.30), transparent 60%),
     radial-gradient(600px 500px at 80% 88%, rgba(33, 212, 253, 0.20), transparent 60%),
@@ -1120,7 +1121,11 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
 .m-lock-avatar {
   display: none;
 }
-.m-lock-title { font-size: 16px; font-weight: 600; margin: 12px 0 18px; }
+.m-lock-title { font-size: 16px; font-weight: 600; margin: 12px 0 6px; }
+.m-lock-hint {
+  font-size: 13px; color: var(--accent-2); font-weight: 600;
+  letter-spacing: 0.5px; margin-bottom: 20px;
+}
 
 /* PIN dots */
 .m-pin { display: flex; gap: 18px; margin-bottom: 34px; }
@@ -1162,5 +1167,3 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
   border: none; background: transparent; font-size: 24px;
 }
 .m-key-del:active { transform: scale(0.92); background: transparent; }
-
-.m-lock-hint { margin-top: 26px; font-size: 12px; color: var(--text-dim); letter-spacing: 0.5px; }

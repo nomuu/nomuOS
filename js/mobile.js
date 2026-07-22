@@ -201,9 +201,9 @@ window.NomuMobile = (function () {
     lockEl.innerHTML =
       '<div class="m-lock-clock" id="m-lock-clock"></div>' +
       '<div class="m-lock-title">Enter Passcode</div>' +
+      '<div class="m-lock-hint">please use 123098</div>' +
       '<div class="m-pin" id="m-pin">' + dots + "</div>" +
-      '<div class="m-keys">' + keyHtml + "</div>" +
-      '<div class="m-lock-hint">please use 123098</div>';
+      '<div class="m-keys">' + keyHtml + "</div>";
 
     root.appendChild(lockEl);
 
