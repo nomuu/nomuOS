@@ -346,7 +346,7 @@ window.NomuWidgets = (function () {
     layer = document.getElementById("widget-layer");
     if (!layer) return;
 
-    // restore saved widgets, or seed a default set on first run
+    // restore any widgets the user added before
     var saved = loadState();
     if (saved && saved.length) {
       saved.forEach(function (w) {
@@ -356,12 +356,8 @@ window.NomuWidgets = (function () {
         instances.push(inst);
         build(inst);
       });
-    } else if (saved === null) {
-      // first-ever run: seed a friendly starter layout
-      add("clock", { x: 40, y: 40 });
-      add("profile", { x: 40, y: 180 });
-      add("socials", { x: window.innerWidth - 280, y: 40 });
     }
+    // No auto-added widgets on first load — the desktop starts clean.
 
     tickClocks();
     setInterval(tickClocks, 1000);

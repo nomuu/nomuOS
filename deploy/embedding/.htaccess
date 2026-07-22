@@ -5,7 +5,7 @@
 
 <IfModule mod_headers.c>
   # Allow embedding ONLY inside your own site + your NomuOS origin.
-  Header always set Content-Security-Policy "frame-ancestors 'self' https://YOUR-NOMUOS-ORIGIN"
+  Header always set Content-Security-Policy "frame-ancestors 'self' https://nomuos.imronaldmendoza.com"
 
   # X-Frame-Options must be removed — it cannot express an allow-list and
   # would block cross-origin framing entirely.
