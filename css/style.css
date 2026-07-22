@@ -1167,3 +1167,87 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
   border: none; background: transparent; font-size: 24px;
 }
 .m-key-del:active { transform: scale(0.92); background: transparent; }
+
+/* ============================================================
+   Calculator app
+   ============================================================ */
+.calc {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 12px;
+  outline: none;
+}
+
+.calc-display {
+  background: var(--glass-strong);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  text-align: right;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.calc-history {
+  color: var(--text-dim);
+  font-size: 13px;
+  min-height: 18px;
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calc-current {
+  color: var(--text);
+  font-size: 34px;
+  font-weight: 600;
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calc-pad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  flex: 1;
+}
+
+.calc-btn {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 500;
+  transition: transform 0.05s ease, background 0.15s ease, filter 0.15s ease;
+}
+
+.calc-btn:hover { background: rgba(255, 255, 255, 0.08); }
+.calc-btn:active { transform: scale(0.95); }
+
+.calc-action { color: var(--accent-3); }
+
+.calc-op {
+  background: rgba(124, 92, 255, 0.18);
+  color: var(--accent-2);
+  font-size: 20px;
+}
+.calc-op:hover { background: rgba(124, 92, 255, 0.3); }
+
+.calc-equals {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 700;
+}
+.calc-equals:hover { filter: brightness(1.1); }
+
+.calc-zero { grid-column: span 2; }

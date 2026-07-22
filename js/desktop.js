@@ -3,7 +3,7 @@ window.NomuDesktop = (function () {
   "use strict";
 
   // Apps shown on desktop and start menu (in order)
-  var APP_ORDER = ["about", "skills", "contact", "browie", "terminal", "files", "editor", "settings"];
+  var APP_ORDER = ["about", "skills", "contact", "browie", "terminal", "files", "editor", "calc", "settings"];
 
   function apps() {
     return APP_ORDER
@@ -17,10 +17,15 @@ window.NomuDesktop = (function () {
     closeStart();
   }
 
+  // Apps intentionally hidden from the desktop (still available in the start menu)
+  var DESKTOP_HIDDEN = ["about", "contact"];
+
   function buildDesktopIcons() {
     var host = document.getElementById("desktop-icons");
     host.innerHTML = "";
-    apps().forEach(function (app) {
+    apps()
+      .filter(function (app) { return DESKTOP_HIDDEN.indexOf(app.id) === -1; })
+      .forEach(function (app) {
       var el = document.createElement("button");
       el.className = "desktop-icon";
       el.innerHTML = '<span class="glyph">' + app.icon + '</span><span class="label"></span>';

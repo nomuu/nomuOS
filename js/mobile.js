@@ -22,6 +22,7 @@ window.NomuMobile = (function () {
     { type: "app", id: "browie" },
     { type: "app", id: "files" },
     { type: "app", id: "editor" },
+    { type: "app", id: "calc" },
     { type: "app", id: "terminal" },
     { type: "app", id: "settings" },
   ];
