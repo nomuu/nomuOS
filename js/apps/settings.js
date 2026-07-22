@@ -73,6 +73,12 @@ window.NomuApps.settings = {
             '" style="background:' + w.css + '" title="' + w.id + '"></div>';
         }).join("");
 
+        var ssOpts = (window.NomuScreensaver && NomuScreensaver.OPTIONS) || [];
+        var ssCur = window.NomuScreensaver ? NomuScreensaver.currentMs() : 0;
+        var ssPills = ssOpts.map(function (o) {
+          return '<button class="ss-opt' + (o.ms === ssCur ? " active" : "") + '" data-ms="' + o.ms + '">' + o.label + '</button>';
+        }).join("");
+
         body.innerHTML =
           '<div class="set">' +
             '<div class="set-group">' +
@@ -82,6 +88,11 @@ window.NomuApps.settings = {
             '<div class="set-group">' +
               '<div class="set-title">Wallpaper</div>' +
               '<div class="wallpapers">' + walls + '</div>' +
+            '</div>' +
+            '<div class="set-group">' +
+              '<div class="set-title">Screensaver</div>' +
+              '<div class="ss-opts">' + ssPills + '</div>' +
+              '<div class="meta" style="font-size:12px;color:var(--text-dim);margin-top:6px">Starts after inactivity. Move the mouse, click or tap to wake.</div>' +
             '</div>' +
             '<div class="set-group">' +
               '<div class="set-title">System</div>' +
@@ -105,6 +116,14 @@ window.NomuApps.settings = {
           el.addEventListener("click", function () {
             NomuTheme.setWallpaper(el.getAttribute("data-wall"));
             body.querySelectorAll(".wall-opt").forEach(function (s) { s.classList.remove("active"); });
+            el.classList.add("active");
+          });
+        });
+
+        body.querySelectorAll(".ss-opt").forEach(function (el) {
+          el.addEventListener("click", function () {
+            if (window.NomuScreensaver) NomuScreensaver.setTimeoutMs(parseInt(el.getAttribute("data-ms"), 10));
+            body.querySelectorAll(".ss-opt").forEach(function (s) { s.classList.remove("active"); });
             el.classList.add("active");
           });
         });

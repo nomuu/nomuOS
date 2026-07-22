@@ -56,6 +56,7 @@
         <span class="va-arrow">›</span>
       </button>
       <div class="start-footer">
+        <button id="start-lock" class="start-action">Lock</button>
         <button id="start-logout" class="start-action">Log out</button>
         <button id="start-restart" class="start-action">Restart</button>
       </div>
@@ -96,6 +97,21 @@
       </div>
       <div id="widget-picker-list" class="wp-list"></div>
     </div>
+
+    <!-- Desktop lock screen (password protected) -->
+    <div id="lockscreen" class="lockscreen hidden">
+      <div class="lock-inner">
+        <div class="lock-avatar">R</div>
+        <div class="lock-user">Ronald Mendoza</div>
+        <div class="lock-clock" id="lock-clock"></div>
+        <form id="lock-form" class="lock-form" autocomplete="off">
+          <input id="lock-input" class="lock-input" type="password" placeholder="Password" autocomplete="off" spellcheck="false" />
+          <button type="submit" class="lock-submit" title="Unlock">→</button>
+        </form>
+        <div id="lock-error" class="lock-error"></div>
+        <div class="lock-hint">please type nomucutie</div>
+      </div>
+    </div>
   </div>
 
   <!-- Mobile shell (iOS-style) — built by js/mobile.js on mobile/narrow viewports -->
@@ -123,6 +139,7 @@
   <script src="js/apps/fileExplorer.js"></script>
   <script src="js/apps/terminal.js"></script>
   <script src="js/widgets.js"></script>
+  <script src="js/screensaver.js"></script>
   <script src="js/desktop.js"></script>
   <script src="js/mobile.js"></script>
   <script src="js/boot.js"></script>

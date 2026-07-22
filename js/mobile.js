@@ -204,6 +204,8 @@ window.NomuMobile = (function () {
 
     // Home indicator: swipe-up substitute — closes the current app.
     root.querySelector("#m-homebar").addEventListener("click", closeTop);
+
+    if (window.NomuScreensaver) NomuScreensaver.init();
   }
 
   function isActive() { return active; }

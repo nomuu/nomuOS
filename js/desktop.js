@@ -136,6 +136,74 @@ window.NomuDesktop = (function () {
     setInterval(tick, 1000 * 15);
   }
 
+  /* ---------------- Lock screen (desktop only, password protected) ---------------- */
+  var LOCK_PASSWORD = "nomucutie";
+  var lockClockTimer = null;
+
+  function lockClockTick() {
+    var t = document.getElementById("lock-clock");
+    if (!t) return;
+    var now = new Date();
+    var time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    var date = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    t.innerHTML = '<span class="lock-time">' + time + '</span><span class="lock-date">' + date + '</span>';
+  }
+
+  function lock() {
+    var ls = document.getElementById("lockscreen");
+    if (!ls) return;
+    closeStart();
+    var input = document.getElementById("lock-input");
+    var err = document.getElementById("lock-error");
+    if (input) input.value = "";
+    if (err) err.textContent = "";
+    ls.classList.remove("hidden");
+    requestAnimationFrame(function () { ls.classList.add("in"); });
+    lockClockTick();
+    clearInterval(lockClockTimer);
+    lockClockTimer = setInterval(lockClockTick, 15000);
+    setTimeout(function () { if (input) input.focus(); }, 50);
+  }
+
+  function unlock() {
+    var ls = document.getElementById("lockscreen");
+    if (!ls) return;
+    ls.classList.remove("in");
+    clearInterval(lockClockTimer);
+    lockClockTimer = null;
+    setTimeout(function () { ls.classList.add("hidden"); }, 350);
+  }
+
+  function tryUnlock() {
+    var input = document.getElementById("lock-input");
+    var err = document.getElementById("lock-error");
+    var val = input ? input.value : "";
+    if (val === LOCK_PASSWORD) {
+      unlock();
+    } else {
+      if (err) err.textContent = "Incorrect password. Try again.";
+      var inner = document.querySelector("#lockscreen .lock-inner");
+      if (inner) {
+        inner.classList.remove("shake");
+        void inner.offsetWidth; // reflow to restart animation
+        inner.classList.add("shake");
+      }
+      if (input) { input.value = ""; input.focus(); }
+    }
+  }
+
+  function wireLock() {
+    var form = document.getElementById("lock-form");
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        tryUnlock();
+      });
+    }
+    var lockBtn = document.getElementById("start-lock");
+    if (lockBtn) lockBtn.addEventListener("click", function () { lock(); });
+  }
+
   function wire() {
     document.getElementById("start-button").addEventListener("click", function (e) {
       e.stopPropagation();
@@ -194,8 +262,10 @@ window.NomuDesktop = (function () {
     buildStartMenu();
     startClock();
     wire();
+    wireLock();
     if (window.NomuWidgets) NomuWidgets.init();
+    if (window.NomuScreensaver) NomuScreensaver.init();
   }
 
-  return { init: init, launch: launch };
+  return { init: init, launch: launch, lock: lock };
 })();
