@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ronald Fernandez Mendoza — Portfolio OS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Boot / splash screen -->
+  <div id="boot-screen" class="boot-screen">
+    <div class="boot-logo">
+      <div class="boot-mark">N</div>
+      <div class="boot-name">NomuOS</div>
+      <div class="boot-tagline">your desktop, reimagined</div>
+    </div>
+    <div class="boot-progress"><div class="boot-bar"></div></div>
+    <div class="boot-hint">Booting…</div>
+  </div>
+
+  <!-- Desktop -->
+  <div id="desktop" class="desktop hidden">
+    <div id="desktop-icons" class="desktop-icons"></div>
+
+    <!-- Widgets sit on the desktop, behind windows -->
+    <div id="widget-layer" class="widget-layer"></div>
+
+    <!-- Windows get injected here -->
+    <div id="window-layer" class="window-layer"></div>
+
+    <!-- Start menu -->
+    <div id="start-menu" class="start-menu hidden">
+      <div class="start-header">
+        <div class="start-mark">R</div>
+        <div>
+          <div class="start-title">Ronald Mendoza</div>
+          <div class="start-sub">Portfolio · NomuOS</div>
+        </div>
+      </div>
+      <div id="start-apps" class="start-apps"></div>
+      <div class="start-divider"></div>
+      <button id="start-viewall" class="start-viewall">
+        <span class="va-glyph">▦</span>
+        <span class="va-text">View All Apps</span>
+        <span class="va-arrow">›</span>
+      </button>
+      <div class="start-footer">
+        <button id="start-logout" class="start-action">Log out</button>
+        <button id="start-restart" class="start-action">Restart</button>
+      </div>
+    </div>
+
+    <!-- All apps drawer -->
+    <div id="all-apps" class="all-apps hidden">
+      <div class="aa-header">
+        <button id="aa-back" class="aa-back" title="Back">‹</button>
+        <div class="aa-title">All Apps</div>
+        <button id="aa-close" class="aa-close" title="Close">×</button>
+      </div>
+      <div class="aa-scroll">
+        <div class="aa-section-title">Apps</div>
+        <div id="aa-apps" class="aa-grid"></div>
+        <div class="aa-section-title">Projects</div>
+        <div id="aa-projects" class="aa-grid"></div>
+      </div>
+    </div>
+
+    <!-- Taskbar / dock -->
+    <div id="taskbar" class="taskbar">
+      <button id="start-button" class="start-button" title="Menu">
+        <span class="start-button-mark">R</span>
+      </button>
+      <div id="task-list" class="task-list"></div>
+      <div class="tray">
+        <button id="widgets-button" class="tray-btn" title="Widgets">🧩</button>
+        <span id="clock" class="clock"></span>
+      </div>
+    </div>
+
+    <!-- Widget picker / gallery -->
+    <div id="widget-picker" class="widget-picker hidden">
+      <div class="wp-header">
+        <div class="wp-title">Widgets</div>
+        <div class="wp-sub">Click to add · drag to place on the desktop</div>
+      </div>
+      <div id="widget-picker-list" class="wp-list"></div>
+    </div>
+  </div>
+
+  <!-- Scripts (plain scripts so index.html works via file://) -->
+  <script src="js/data/profile.js"></script>
+  <script src="js/fileSystem.js"></script>
+  <script src="js/windowManager.js"></script>
+  <script src="js/apps/about.js"></script>
+  <script src="js/apps/skills.js"></script>
+  <script src="js/apps/projects.js"></script>
+  <script src="js/apps/contact.js"></script>
+  <script src="js/catGame.js"></script>
+  <script src="js/apps/browie.js"></script>
+  <script src="js/apps/settings.js"></script>
+  <script src="js/apps/textEditor.js"></script>
+  <script src="js/apps/fileExplorer.js"></script>
+  <script src="js/apps/terminal.js"></script>
+  <script src="js/widgets.js"></script>
+  <script src="js/desktop.js"></script>
+  <script src="js/boot.js"></script>
+</body>
+</html>

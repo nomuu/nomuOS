@@ -1,0 +1,15 @@
+# For Netlify or Cloudflare Pages: place this file named "_headers"
+# in your published output directory (or project root for Netlify).
+#
+# Replace https://YOUR-NOMUOS-ORIGIN with the origin where NomuOS/Browie runs.
+# If NomuOS is on the SAME origin as these pages, 'self' alone is enough.
+#
+# IMPORTANT: do NOT also send "X-Frame-Options" — it would override this and
+# block embedding. Remove any X-Frame-Options you currently set.
+
+/*
+  Content-Security-Policy: frame-ancestors 'self' https://YOUR-NOMUOS-ORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload

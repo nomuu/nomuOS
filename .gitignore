@@ -1,0 +1,10 @@
+# dependencies / tooling
+node_modules/
+.vercel
+
+# os / editor junk
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

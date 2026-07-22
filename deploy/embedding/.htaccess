@@ -1,0 +1,18 @@
+# Apache: place in the site's document root (or a parent dir).
+# Requires mod_headers enabled.
+#
+# Replace https://YOUR-NOMUOS-ORIGIN with the origin where NomuOS/Browie runs.
+
+<IfModule mod_headers.c>
+  # Allow embedding ONLY inside your own site + your NomuOS origin.
+  Header always set Content-Security-Policy "frame-ancestors 'self' https://YOUR-NOMUOS-ORIGIN"
+
+  # X-Frame-Options must be removed — it cannot express an allow-list and
+  # would block cross-origin framing entirely.
+  Header always unset X-Frame-Options
+
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+</IfModule>
