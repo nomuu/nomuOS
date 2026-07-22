@@ -803,6 +803,10 @@ html.is-mobile #m-boot.gone { display: none !important; }
   color: #fff; font-size: 76px; font-weight: 800; line-height: 1; letter-spacing: 1px;
   text-shadow: 0 0 40px rgba(255,255,255,0.25);
 }
+.m-boot-name {
+  margin-top: 16px; color: #fff; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;
+}
+.m-boot-name span { font-weight: 400; color: rgba(255,255,255,0.6); font-size: 14px; }
 .m-boot-progress {
   position: absolute; bottom: 13%; left: 50%; transform: translateX(-50%);
   width: 160px; height: 4px; border-radius: 999px;
