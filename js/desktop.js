@@ -58,21 +58,74 @@ window.NomuDesktop = (function () {
     });
   }
 
-  function buildStartMenu() {
-    var host = document.getElementById("start-apps");
-    host.innerHTML = "";
-    // Start menu shows the first 5 apps plus Settings (6 total).
+  // Default start-menu apps: first 5 apps plus Settings (6 total).
+  function defaultStartApps() {
     var startApps = apps().slice(0, 5);
     var settings = window.NomuApps.settings;
     if (settings && startApps.indexOf(settings) === -1) startApps.push(settings);
-    startApps.forEach(function (app) {
+    return startApps;
+  }
+
+  function renderStartApps(list) {
+    var host = document.getElementById("start-apps");
+    host.innerHTML = "";
+    if (!list.length) {
+      var empty = document.createElement("div");
+      empty.className = "start-empty";
+      empty.textContent = "No results found";
+      host.appendChild(empty);
+      return;
+    }
+    list.forEach(function (entry) {
       var el = document.createElement("button");
       el.className = "start-app";
-      el.innerHTML = '<span class="glyph">' + app.icon + '</span><span class="label"></span>';
-      el.querySelector(".label").textContent = app.name;
-      el.addEventListener("click", function () { launch(app.id); });
+      el.innerHTML = '<span class="glyph">' + entry.glyph + '</span><span class="label"></span>';
+      el.querySelector(".label").textContent = entry.name;
+      el.addEventListener("click", entry.onClick);
       host.appendChild(el);
     });
+  }
+
+  // Build a render entry from an app object.
+  function appEntry(app) {
+    return { glyph: app.icon, name: app.name, onClick: function () { launch(app.id); } };
+  }
+
+  // Build a render entry from a project object.
+  function projectEntry(proj) {
+    var canOpen = window.NomuApps && NomuApps.projects && typeof NomuApps.projects.launch === "function";
+    return {
+      glyph: '<i class="' + (proj.icon || "fas fa-code") + '"></i>',
+      name: proj.name,
+      onClick: function () { if (canOpen) NomuApps.projects.launch(proj); closeStart(); },
+    };
+  }
+
+  function buildStartMenu() {
+    renderStartApps(defaultStartApps().map(appEntry));
+  }
+
+  // Filter apps AND projects by name; empty query restores the default 6.
+  function searchStartApps(query) {
+    query = (query || "").trim().toLowerCase();
+    if (!query) { renderStartApps(defaultStartApps().map(appEntry)); return; }
+
+    var appMatches = apps().filter(function (app) {
+      return app.name.toLowerCase().indexOf(query) !== -1;
+    }).map(appEntry);
+
+    var projMatches = projectList().filter(function (proj) {
+      return proj.name.toLowerCase().indexOf(query) !== -1;
+    }).map(projectEntry);
+
+    renderStartApps(appMatches.concat(projMatches));
+  }
+
+  // Launch the first currently-listed app (used by Enter in the search box).
+  function launchFirstStartApp() {
+    var host = document.getElementById("start-apps");
+    var first = host && host.querySelector(".start-app");
+    if (first) first.click();
   }
 
   /* ---------------- All Apps drawer ---------------- */
@@ -127,6 +180,13 @@ window.NomuDesktop = (function () {
   function openStart() {
     document.getElementById("start-menu").classList.remove("hidden");
     startOpen = true;
+    // Reset search to the default app list and focus the box.
+    var search = document.getElementById("start-search");
+    if (search) {
+      search.value = "";
+      searchStartApps("");
+      setTimeout(function () { search.focus(); }, 50);
+    }
   }
   function closeStart() {
     document.getElementById("start-menu").classList.add("hidden");
@@ -218,6 +278,18 @@ window.NomuDesktop = (function () {
       e.stopPropagation();
       toggleStart();
     });
+
+    // Start menu app search
+    var search = document.getElementById("start-search");
+    if (search) {
+      search.addEventListener("input", function () { searchStartApps(search.value); });
+      search.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); launchFirstStartApp(); }
+        else if (e.key === "Escape") { search.value = ""; searchStartApps(""); closeStart(); }
+      });
+      // clicking inside the search must not bubble to the outside-close handler
+      search.addEventListener("click", function (e) { e.stopPropagation(); });
+    }
 
     // click outside closes start menu
     document.addEventListener("click", function (e) {

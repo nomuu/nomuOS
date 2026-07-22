@@ -1318,3 +1318,50 @@ html.is-mobile #m-boot .m-boot-bar { animation: mBootLoad 2.5s ease forwards; }
   border-top: 1px solid var(--stroke);
   min-height: 26px;
 }
+
+
+/* ============================================================
+   Start menu search bar
+   ============================================================ */
+.start-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 4px 0 12px;
+}
+
+.start-search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.start-search {
+  width: 100%;
+  padding: 10px 12px 10px 34px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--glass-strong);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.start-search::placeholder { color: var(--text-dim); }
+
+.start-search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.25);
+}
+
+.start-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 18px 0;
+}
