@@ -5,6 +5,12 @@ window.NomuBoot = (function () {
   var BOOT_MS = 2600;
   var initialized = false;
 
+  // Real mobile/touch devices: don't boot the OS at all — show the gate.
+  function isMobileDevice() {
+    var ua = navigator.userAgent || "";
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+  }
+
   function showDesktop() {
     var boot = document.getElementById("boot-screen");
     var desktop = document.getElementById("desktop");
@@ -22,6 +28,11 @@ window.NomuBoot = (function () {
   }
 
   function boot() {
+    // On phones/tablets, skip the OS entirely and show the desktop-only notice.
+    if (isMobileDevice()) {
+      document.documentElement.classList.add("is-mobile");
+      return;
+    }
     // apply saved theme early so the boot screen matches
     try { NomuTheme.apply(); } catch (e) {}
     var boot = document.getElementById("boot-screen");

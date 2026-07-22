@@ -783,3 +783,39 @@ a.wg-proj:hover { border-color: var(--accent); background: rgba(124,92,255,0.12)
 }
 .catgame:focus { border-color: var(--accent); }
 .catgame-hint { margin-top: 8px; font-size: 11px; color: var(--text-dim); }
+
+/* ============================================================
+   Mobile gate — desktop-only notice
+   ============================================================ */
+.mobile-gate {
+  display: none;
+  position: fixed; inset: 0; z-index: 100000;
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 32px;
+  background:
+    radial-gradient(900px 700px at 50% 30%, rgba(124,92,255,0.30), transparent 60%),
+    linear-gradient(160deg, var(--bg-0), var(--bg-1));
+  color: var(--text);
+}
+.mg-inner { max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.mg-mark {
+  width: 72px; height: 72px; border-radius: 20px; display: grid; place-items: center;
+  font-size: 40px; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 16px 40px rgba(124,92,255,0.5);
+}
+.mg-title { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.mg-emoji { font-size: 52px; margin-top: 6px; }
+.mg-head { font-size: 22px; }
+.mg-text { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+.mg-sub { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
+
+/* Show the gate (and hide the OS) on narrow / mobile viewports */
+@media (max-width: 820px) {
+  .mobile-gate { display: flex; }
+  #boot-screen, #desktop { display: none !important; }
+}
+/* Show the gate on detected mobile devices regardless of width */
+html.is-mobile .mobile-gate { display: flex; }
+html.is-mobile #boot-screen,
+html.is-mobile #desktop { display: none !important; }
