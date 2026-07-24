@@ -15,6 +15,7 @@ window.NomuMobile = (function () {
   var activeSheet = null;   // the app sheet currently shown fullscreen (null = home)
   var switcherEl = null;    // the app-switcher overlay, when open
   var ccEl = null;          // the control-center (swipe-down) panel, when open
+  var libraryEl = null;     // the App Library (swipe-left) overlay, when open
 
   // Home screen layout (Projects is a folder that lists the projects).
   var HOME_ITEMS = [
@@ -270,11 +271,159 @@ window.NomuMobile = (function () {
     switcherEl = null;
   }
 
+  /* ---------------- App Library (swipe left) ---------------- */
+  // Every registered app (except the Projects launcher), sorted by name.
+  function collectApps() {
+    var apps = window.NomuApps || {};
+    var list = [];
+    Object.keys(apps).forEach(function (k) {
+      var a = apps[k];
+      if (a && typeof a.open === "function" && k !== "projects") {
+        list.push({ key: k, name: a.name || k, icon: a.icon || "▪" });
+      }
+    });
+    list.sort(function (x, y) { return x.name.localeCompare(y.name); });
+    return list;
+  }
+
+  function openAppLibrary() {
+    if (libraryEl) return;
+    closeSwitcher();
+    closeControlCenter();
+
+    var appList = collectApps();
+    var projs = ((window.NomuProfile || {}).projects) || {};
+    var allProjects = (projs.featured || []).concat(projs.others || []);
+
+    var appsHtml = appList.map(function (a) {
+      return '<button class="m-icon" data-app="' + esc(a.key) + '" ' +
+        'data-name="' + esc(a.name.toLowerCase()) + '">' +
+        '<span class="m-icon-tile"><span class="m-icon-glyph">' + a.icon + "</span></span>" +
+        '<span class="m-icon-label">' + esc(a.name) + "</span></button>";
+    }).join("");
+
+    var projsHtml = allProjects.map(function (p, i) {
+      return '<button class="m-icon" data-proj="' + i + '" ' +
+        'data-name="' + esc((p.name || "").toLowerCase()) + '">' +
+        '<span class="m-icon-tile m-icon-folder"><span class="m-icon-glyph"><i class="' +
+          (p.icon || "fas fa-code") + '"></i></span></span>' +
+        '<span class="m-icon-label">' + esc(p.name || "") + "</span></button>";
+    }).join("");
+
+    libraryEl = document.createElement("div");
+    libraryEl.className = "m-lib";
+    libraryEl.style.cssText =
+      "position:absolute;inset:0;z-index:78;display:flex;flex-direction:column;" +
+      "opacity:0;transform:translateX(10%);transition:opacity .22s ease,transform .22s ease;" +
+      "background:rgba(5,6,15,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);";
+
+    libraryEl.innerHTML =
+      '<div style="padding:18px 16px 8px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);' +
+          "border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:10px 14px;\">" +
+          '<span style="font-size:15px;opacity:.8;">🔍</span>' +
+          '<input class="m-lib-q" type="text" placeholder="Search apps & projects" ' +
+            'autocomplete="off" spellcheck="false" ' +
+            "style=\"flex:1;min-width:0;background:transparent;border:0;outline:none;color:#fff;" +
+            "font:500 15px 'Segoe UI',sans-serif;\" />" +
+        "</div>" +
+      "</div>" +
+      '<div class="m-lib-scroll" style="flex:1;overflow-y:auto;padding:6px 14px 28px;touch-action:pan-y;">' +
+        '<div class="m-lib-sec" data-sec="apps" style="color:#fff;opacity:.65;' +
+          "font:600 12px 'Segoe UI',sans-serif;letter-spacing:.04em;margin:10px 4px 12px;\">APPS</div>" +
+        '<div class="m-grid" id="m-lib-apps">' + appsHtml + "</div>" +
+        '<div class="m-lib-sec" data-sec="projects" style="color:#fff;opacity:.65;' +
+          "font:600 12px 'Segoe UI',sans-serif;letter-spacing:.04em;margin:22px 4px 12px;\">PROJECTS</div>" +
+        '<div class="m-grid" id="m-lib-projects">' + projsHtml + "</div>" +
+        '<div class="m-lib-empty" style="display:none;color:#fff;opacity:.6;text-align:center;' +
+          "padding:48px 10px;font:500 14px 'Segoe UI',sans-serif;\">No results</div>" +
+      "</div>";
+
+    libraryEl.querySelectorAll("[data-app]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-app");
+        closeAppLibrary();
+        launchApp(key);
+      });
+    });
+    libraryEl.querySelectorAll("[data-proj]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var p = allProjects[parseInt(btn.getAttribute("data-proj"), 10)];
+        closeAppLibrary();
+        if (p && window.NomuApps && NomuApps.projects && NomuApps.projects.launch) {
+          NomuApps.projects.launch(p);
+        }
+      });
+    });
+
+    var q = libraryEl.querySelector(".m-lib-q");
+    var empty = libraryEl.querySelector(".m-lib-empty");
+    function applyFilter() {
+      var term = (q.value || "").trim().toLowerCase();
+      var anyVisible = false;
+      [["#m-lib-apps", "apps"], ["#m-lib-projects", "projects"]].forEach(function (pair) {
+        var grid = libraryEl.querySelector(pair[0]);
+        var sec = libraryEl.querySelector('.m-lib-sec[data-sec="' + pair[1] + '"]');
+        var shown = 0;
+        grid.querySelectorAll(".m-icon").forEach(function (ic) {
+          var match = !term || (ic.getAttribute("data-name") || "").indexOf(term) !== -1;
+          ic.style.display = match ? "" : "none";
+          if (match) shown++;
+        });
+        if (sec) sec.style.display = shown ? "" : "none";
+        grid.style.display = shown ? "" : "none";
+        if (shown) anyVisible = true;
+      });
+      if (empty) empty.style.display = anyVisible ? "none" : "block";
+    }
+    q.addEventListener("input", applyFilter);
+    applyFilter(); // hide any section that has no items to begin with
+
+    wireLibrarySwipe(libraryEl);
+
+    root.appendChild(libraryEl);
+    requestAnimationFrame(function () {
+      if (!libraryEl) return;
+      libraryEl.style.opacity = "1";
+      libraryEl.style.transform = "translateX(0)";
+    });
+    // Try to focus the search field (some mobile browsers require a gesture).
+    setTimeout(function () { try { q.focus(); } catch (e) {} }, 80);
+  }
+
+  function closeAppLibrary() {
+    if (!libraryEl) return;
+    var el = libraryEl;
+    libraryEl = null;
+    el.style.opacity = "0";
+    el.style.transform = "translateX(10%)";
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 240);
+  }
+
+  // Swipe right anywhere on the library to dismiss it (back to home).
+  function wireLibrarySwipe(el) {
+    var sx = 0, sy = 0, tracking = false;
+    el.addEventListener("pointerdown", function (e) {
+      tracking = true; sx = e.clientX; sy = e.clientY;
+    });
+    el.addEventListener("pointermove", function (e) {
+      if (!tracking) return;
+      var dx = e.clientX - sx, dy = Math.abs(e.clientY - sy);
+      if (dx > 70 && dx > dy) { tracking = false; closeAppLibrary(); }
+    });
+    var stop = function () { tracking = false; };
+    el.addEventListener("pointerup", stop);
+    el.addEventListener("pointercancel", stop);
+  }
+
   // Home indicator: tap = minimize the current app to home.
   function wireHomeBar() {
     var bar = root.querySelector("#m-homebar");
     if (!bar) return;
-    bar.addEventListener("click", function () { if (activeSheet) goHome(); });
+    bar.addEventListener("click", function () {
+      if (libraryEl) { closeAppLibrary(); return; }
+      if (activeSheet) goHome();
+    });
   }
 
   /* ---------------- Control Center (swipe down from the top) ---------------- */
@@ -395,20 +544,28 @@ window.NomuMobile = (function () {
   // the pointerup (common on real touch devices).
   function wireGestures() {
     var sY = 0, sX = 0, edge = 0, fired = false; // edge: 1 = top, 2 = bottom
+    var hX = 0, hY = 0, hTrack = false;           // horizontal (swipe-left) tracking
     root.addEventListener("pointerdown", function (e) {
-      fired = false; edge = 0;
-      if (switcherEl || ccEl) return;
+      fired = false; edge = 0; hTrack = false;
+      if (switcherEl || ccEl || libraryEl) return;
       var r = root.getBoundingClientRect();
       if (e.clientY - r.top <= 64) { edge = 1; sY = e.clientY; sX = e.clientX; }
       else if (r.bottom - e.clientY <= 44) { edge = 2; sY = e.clientY; sX = e.clientX; }
+      else if (!activeSheet) { hTrack = true; hX = e.clientX; hY = e.clientY; }
     });
     root.addEventListener("pointermove", function (e) {
-      if (!edge || fired) return;
-      var dy = e.clientY - sY, dx = Math.abs(e.clientX - sX);
-      if (edge === 1 && dy > 45 && dy > dx) { fired = true; openControlCenter(); }
-      else if (edge === 2 && -dy > 45 && -dy > dx) { fired = true; openSwitcher(); }
+      if (fired) return;
+      if (edge) {
+        var dy = e.clientY - sY, dx = Math.abs(e.clientX - sX);
+        if (edge === 1 && dy > 45 && dy > dx) { fired = true; openControlCenter(); }
+        else if (edge === 2 && -dy > 45 && -dy > dx) { fired = true; openSwitcher(); }
+      } else if (hTrack) {
+        // finger moving left (negative dx) on the home screen -> App Library
+        var hdx = e.clientX - hX, hdy = Math.abs(e.clientY - hY);
+        if (-hdx > 55 && -hdx > hdy) { fired = true; hTrack = false; openAppLibrary(); }
+      }
     });
-    var clear = function () { edge = 0; };
+    var clear = function () { edge = 0; hTrack = false; };
     window.addEventListener("pointerup", clear);
     window.addEventListener("pointercancel", clear);
   }
@@ -565,6 +722,12 @@ window.NomuMobile = (function () {
     [".m-statusbar", ".m-home-head", "#m-dock", "#m-homebar"].forEach(function (sel) {
       var el = root.querySelector(sel);
       if (el) el.style.touchAction = "none";
+    });
+    // The home body allows vertical scroll but hands horizontal drags to us,
+    // so the swipe-left → App Library gesture is detected reliably on touch.
+    [".m-home", ".m-grid"].forEach(function (sel) {
+      var el = root.querySelector(sel);
+      if (el) el.style.touchAction = "pan-y";
     });
     // Transparent full-width strip along the very bottom so the swipe-up gesture
     // works everywhere (even inside an open app), not just on the thin home bar.
