@@ -357,6 +357,7 @@ window.NomuDesktop = (function () {
     wireLock();
     if (window.NomuWidgets) NomuWidgets.init();
     if (window.NomuScreensaver) NomuScreensaver.init();
+    if (window.NomuGravity) NomuGravity.init();
   }
 
   return { init: init, launch: launch, lock: lock };
