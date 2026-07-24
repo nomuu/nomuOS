@@ -67,6 +67,7 @@ window.NomuApps.terminal = {
               "  open <path>       open folder in File Explorer\n" +
               "  clear             clear the screen\n" +
               "  exit              close the terminal\n" +
+              "  gravity on|off    toggle desktop gravity 🪐\n" +
               "  date              current date/time\n" +
               "  whoami            current user\n" +
               "  neofetch          system info\n" +
@@ -125,6 +126,13 @@ window.NomuApps.terminal = {
             NomuApps.files.open(target);
           },
           clear: function () { out.innerHTML = ""; },
+          gravity: function (args) {
+            var mode = (args[0] || "").toLowerCase();
+            if (!window.NomuGravity) { print("gravity: not available here", "err"); return; }
+            if (mode === "on") { NomuGravity.enable(); print("gravity: ON — everything falls! 🪐"); }
+            else if (mode === "off") { NomuGravity.disable(); print("gravity: OFF — back to normal."); }
+            else { print("usage: gravity on | gravity off", "err"); }
+          },
           exit: function () {
             print("logout");
             setTimeout(function () { api.close(); }, 120);
