@@ -103,6 +103,192 @@ window.NomuApps.terminal = {
           });
         }
 
+        // ---- "hack" easter egg: multiple matrix windows + a HAKDOG finale ----
+        function matrixRain(canvas) {
+          var ctx = canvas.getContext("2d");
+          var fontSize = 14, drops = [], raf = null;
+          var chars = "アカサタナ0123456789ABCDEF#$*HAKDOG".split("");
+          function size() {
+            canvas.width = canvas.clientWidth || 240;
+            canvas.height = canvas.clientHeight || 160;
+            var cols = Math.max(1, Math.floor(canvas.width / fontSize));
+            drops = [];
+            for (var i = 0; i < cols; i++) drops[i] = Math.floor(Math.random() * (canvas.height / fontSize));
+          }
+          function draw() {
+            if (!canvas.isConnected) { if (raf) cancelAnimationFrame(raf); return; }
+            ctx.fillStyle = "rgba(0,0,0,0.09)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#39ff14";
+            ctx.font = fontSize + "px monospace";
+            for (var i = 0; i < drops.length; i++) {
+              ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fontSize, drops[i] * fontSize);
+              if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+              drops[i]++;
+            }
+            raf = requestAnimationFrame(draw);
+          }
+          setTimeout(function () { size(); draw(); }, 30);
+        }
+
+        function bigWord(word) {
+          var G = {
+            H: ["#   #", "#   #", "#####", "#   #", "#   #"],
+            A: [" ### ", "#   #", "#####", "#   #", "#   #"],
+            K: ["#   #", "#  # ", "###  ", "#  # ", "#   #"],
+            D: ["#### ", "#   #", "#   #", "#   #", "#### "],
+            O: [" ### ", "#   #", "#   #", "#   #", " ### "],
+            G: [" ####", "#    ", "# ###", "#   #", " ####"],
+          };
+          var rows = ["", "", "", "", ""];
+          word.split("").forEach(function (c) {
+            var g = G[c] || ["     ", "     ", "     ", "     ", "     "];
+            for (var r = 0; r < 5; r++) rows[r] += g[r] + "  ";
+          });
+          return rows.join("\n");
+        }
+
+        function hackArt() {
+          return (
+            "   .-''''''''''''''''''''''''''-.\n" +
+            "  /  ~~~~~~~~~~~~~~~~~~~~~~~~~~  \\\n" +
+            " |  (==========================)  |\n" +
+            "  \\  ~~~~~~~~~~~~~~~~~~~~~~~~~~  /\n" +
+            "   '-..........................-'\n\n" +
+            bigWord("HAKDOG") + "\n\n" +
+            "   >> ACCESS GRANTED  —  char lang 😎 <<"
+          );
+        }
+
+        function startHack() {
+          var handles = [], timers = [], closed = false;
+          var COUNT = 20;
+
+          function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+          function hex(n) { var s = ""; for (var i = 0; i < n; i++) s += "0123456789abcdef"[Math.floor(Math.random() * 16)]; return s; }
+
+          var FILES = ["/usr/lib/libc.so", "/sys/kernel/core", "/etc/shadow", "/var/log/auth.log",
+            "/boot/vmlinuz", "/root/.ssh/id_rsa", "/proc/1/mem", "C:\\Windows\\System32\\ntoskrnl.exe",
+            "/opt/nomu/secrets.db", "/dev/mem"];
+          var PKGS = ["libhakdog-dev", "nmap", "john", "metasploit", "openssl", "payload-gen",
+            "rootkit-lite", "ghidra", "hydra", "tor"];
+          var TARGETS = ["10.0.0.14", "192.168.1.1", "172.16.0.9", "fe80::1", "mainframe", "gibson", "the-cloud"];
+
+          function genInject() { return "[inject] " + rnd(FILES) + " <- 0x" + hex(6) + "  [OK]"; }
+          function genEncrypt() { return "[crypt] AES-256 " + rnd(FILES) + " => " + hex(16); }
+          function genInstall() { return "Get " + rnd(PKGS) + "  " + Math.floor(Math.random() * 100) + "% [" + hex(4) + "]"; }
+          function genScan() { return "scan " + rnd(TARGETS) + ":" + Math.floor(Math.random() * 65535) + " ... open"; }
+
+          var STYLES = [
+            { title: "root@nomu:~#", icon: "💀", kind: "matrix", color: "#39ff14" },
+            { title: "injector", icon: "📁", kind: "log", color: "#21d4fd", gen: genInject },
+            { title: "cryptd", icon: "🔒", kind: "log", color: "#ff5c9d", gen: genEncrypt },
+            { title: "pkg-installer", icon: "📦", kind: "log", color: "#ffb347", gen: genInstall },
+            { title: "portscan", icon: "📡", kind: "log", color: "#2fd671", gen: genScan },
+          ];
+
+          function closeAll() {
+            if (closed) return;
+            closed = true;
+            timers.forEach(clearTimeout);
+            document.removeEventListener("click", closeAll, true);
+            handles.forEach(function (h) { try { h.close(); } catch (e) {} });
+            handles = [];
+          }
+
+          function logWindow(body, s) {
+            var box = document.createElement("div");
+            box.style.cssText =
+              "height:100%;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;" +
+              "padding:8px;box-sizing:border-box;color:" + s.color + ";font:700 11px/1.3 monospace;" +
+              "text-shadow:0 0 4px " + s.color + ";";
+            body.appendChild(box);
+            var t = setInterval(function () {
+              if (!body.isConnected) { clearInterval(t); return; }
+              var d = document.createElement("div");
+              d.textContent = s.gen();
+              box.appendChild(d);
+              while (box.children.length > 40) box.removeChild(box.firstChild);
+            }, 110 + Math.floor(Math.random() * 150));
+          }
+
+          function openWin(i) {
+            if (closed) return;
+            var s = (i === 1) ? STYLES[0] : rnd(STYLES);   // guarantee at least one matrix
+            var w = 220 + Math.floor(Math.random() * 260);
+            var h = 140 + Math.floor(Math.random() * 170);
+            var x = 10 + Math.floor(Math.random() * Math.max(1, window.innerWidth - w - 20));
+            var y = 10 + Math.floor(Math.random() * Math.max(1, window.innerHeight - h - 120));
+            handles.push(NomuWM.open({
+              key: "hack-" + i + "-" + Date.now(),
+              title: s.title, icon: s.icon,
+              width: w, height: h, x: x, y: y,
+              render: function (body) {
+                body.style.background = "#000"; body.style.padding = "0"; body.style.overflow = "hidden";
+                if (s.kind === "matrix") {
+                  var c = document.createElement("canvas");
+                  c.style.cssText = "display:block;width:100%;height:100%;background:#000;";
+                  body.appendChild(c);
+                  matrixRain(c);
+                } else {
+                  logWindow(body, s);
+                }
+              },
+            }));
+          }
+
+          function openFinal() {
+            if (closed) return;
+            var w = 540, h = 380;
+            var x = Math.max(20, (window.innerWidth - w) / 2);
+            var y = Math.max(20, (window.innerHeight - h) / 2 - 40);
+            handles.push(NomuWM.open({
+              key: "hack-final-" + Date.now(),
+              title: "ACCESS GRANTED", icon: "🌭",
+              width: w, height: h, x: x, y: y,
+              render: function (body) {
+                body.style.background = "#000";
+                var pre = document.createElement("pre");
+                pre.style.cssText =
+                  "margin:0;padding:16px;color:#39ff14;font:800 30px/1.15 monospace;" +
+                  "white-space:pre-wrap;word-break:break-all;overflow:auto;height:100%;" +
+                  "box-sizing:border-box;text-shadow:0 0 8px #39ff14;";
+                body.appendChild(pre);
+
+                // Phase 1: a long, growing "HAAAAAA..." scream.
+                var text = "HA";
+                pre.textContent = text;
+                var grow = setInterval(function () {
+                  if (!body.isConnected) { clearInterval(grow); return; }
+                  text += "A";
+                  pre.textContent = text;
+                  pre.scrollTop = pre.scrollHeight;
+                  if (text.length >= 64) {
+                    clearInterval(grow);
+                    // Phase 2: reveal the HAKDOG hotdog art.
+                    setTimeout(function () {
+                      if (!body.isConnected) return;
+                      pre.style.font = "700 11px/1.1 monospace";
+                      pre.style.whiteSpace = "pre";
+                      pre.style.wordBreak = "normal";
+                      pre.textContent = hackArt();
+                    }, 550);
+                  }
+                }, 45);
+              },
+            }));
+          }
+
+          for (var i = 1; i <= COUNT; i++) {
+            (function (n) { timers.push(setTimeout(function () { openWin(n); }, n * 140)); })(i);
+          }
+          timers.push(setTimeout(openFinal, COUNT * 140 + 500));
+          // once the show has started, a click anywhere closes everything
+          timers.push(setTimeout(function () {
+            if (!closed) document.addEventListener("click", closeAll, true);
+          }, 500));
+        }
+
         var commands = {
           help: function () {
             print(
@@ -123,6 +309,7 @@ window.NomuApps.terminal = {
               "  gravity on|off    toggle desktop gravity 🪐\n" +
               "  shutdown          turn off NomuOS… or not 😉\n" +
               "  apt install <pkg> install a package… supposedly 📦\n" +
+              "  hack              become a l33t hacker 💀\n" +
               "  date              current date/time\n" +
               "  whoami            current user\n" +
               "  neofetch          system info\n" +
@@ -191,6 +378,10 @@ window.NomuApps.terminal = {
           shutdown: function () {
             print("Shutting down NomuOS…");
             fakeShutdown();
+          },
+          hack: function () {
+            print("Initiating breach sequence... 😈 (click anywhere to bail)");
+            startHack();
           },
           apt: function (args) {
             if ((args[0] || "") !== "install") { print("usage: apt install <package>", "err"); return; }
