@@ -50,6 +50,59 @@ window.NomuApps.terminal = {
           out.appendChild(line);
         }
 
+        // Fake "shutdown" sequence: a shutting-down screen, then a joke blue screen.
+        function fakeShutdown() {
+          if (document.getElementById("nomu-shutdown")) return;
+
+          if (!document.getElementById("nomu-shutdown-style")) {
+            var st = document.createElement("style");
+            st.id = "nomu-shutdown-style";
+            st.textContent =
+              "@keyframes nomuSpin{to{transform:rotate(360deg)}}" +
+              "#nomu-shutdown .nsd-spin{width:46px;height:46px;border-radius:50%;" +
+              "border:4px solid rgba(255,255,255,.25);border-top-color:#fff;" +
+              "animation:nomuSpin .9s linear infinite;margin:0 auto 22px;}";
+            document.head.appendChild(st);
+          }
+
+          var ov = document.createElement("div");
+          ov.id = "nomu-shutdown";
+          ov.style.cssText =
+            "position:fixed;inset:0;z-index:999999;display:flex;align-items:center;" +
+            "justify-content:center;text-align:center;color:#fff;" +
+            "font-family:'Segoe UI',sans-serif;background:#0a0a0f;";
+          ov.innerHTML =
+            "<div>" +
+              '<div style="position:relative;width:66px;height:66px;margin:0 auto 22px;">' +
+                '<div class="nsd-spin" style="position:absolute;inset:0;width:100%;height:100%;margin:0;"></div>' +
+                '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+                  'font-weight:800;font-size:24px;color:#fff;">N</div>' +
+              "</div>" +
+              '<div style="font-size:20px;font-weight:500;letter-spacing:.3px;">Shutting down</div>' +
+            "</div>";
+          document.body.appendChild(ov);
+
+          setTimeout(function () { showBlueScreen(ov); }, 4000);
+        }
+
+        function showBlueScreen(ov) {
+          ov.style.background = "#0078d7";
+          ov.style.cursor = "pointer";
+          ov.innerHTML =
+            '<div style="max-width:640px;padding:24px;text-align:left;line-height:1.45;">' +
+              '<div style="font-size:84px;line-height:1;margin-bottom:18px;">:)</div>' +
+              '<div style="font-size:22px;font-weight:600;margin-bottom:14px;">' +
+                "Just kidding. We don't do that here. 😄</div>" +
+              '<div style="font-size:15px;opacity:.92;">' +
+                "NomuOS ran into a completely fake problem and pretended to restart.<br>" +
+                "0% complete… actually, never mind.</div>" +
+              '<div style="font-size:13px;opacity:.75;margin-top:24px;">Click anywhere to go back.</div>' +
+            "</div>";
+          ov.addEventListener("click", function () {
+            if (ov.parentNode) ov.parentNode.removeChild(ov);
+          });
+        }
+
         var commands = {
           help: function () {
             print(
@@ -68,6 +121,7 @@ window.NomuApps.terminal = {
               "  clear             clear the screen\n" +
               "  exit              close the terminal\n" +
               "  gravity on|off    toggle desktop gravity 🪐\n" +
+              "  shutdown          turn off NomuOS… or not 😉\n" +
               "  date              current date/time\n" +
               "  whoami            current user\n" +
               "  neofetch          system info\n" +
@@ -132,6 +186,10 @@ window.NomuApps.terminal = {
             if (mode === "on") { NomuGravity.enable(); print("gravity: ON — everything falls! 🪐"); }
             else if (mode === "off") { NomuGravity.disable(); print("gravity: OFF — back to normal."); }
             else { print("usage: gravity on | gravity off", "err"); }
+          },
+          shutdown: function () {
+            print("Shutting down NomuOS…");
+            fakeShutdown();
           },
           exit: function () {
             print("logout");
