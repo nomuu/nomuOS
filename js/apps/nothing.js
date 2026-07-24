@@ -165,6 +165,49 @@ window.NomuApps.nothing = {
         window.addEventListener("pointerup", onPointerUp);
         setTimeout(function () { try { canvas.focus(); } catch (e) {} }, 60);
 
+        /* ---------- mobile-only on-screen controls ---------- */
+        var onMobile = !!(window.NomuMobile && NomuMobile.isActive());
+        if (onMobile) {
+          body.style.position = "relative";
+          var pad = document.createElement("div");
+          pad.className = "nothing-pad";
+          pad.style.cssText =
+            "position:absolute;left:0;right:0;bottom:0;padding:14px 18px;" +
+            "display:flex;justify-content:space-between;align-items:flex-end;" +
+            "pointer-events:none;z-index:5;user-select:none;-webkit-user-select:none;";
+          var btnCss =
+            "pointer-events:auto;width:64px;height:64px;border-radius:50%;" +
+            "border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);" +
+            "color:#fff;font-size:26px;line-height:1;display:flex;align-items:center;" +
+            "justify-content:center;backdrop-filter:blur(4px);touch-action:none;" +
+            "-webkit-tap-highlight-color:transparent;";
+          pad.innerHTML =
+            '<div style="display:flex;gap:12px;">' +
+              '<button class="np-left"  style="' + btnCss + '">◄</button>' +
+              '<button class="np-right" style="' + btnCss + '">►</button>' +
+            "</div>" +
+            '<button class="np-thrust" style="' + btnCss + 'width:78px;height:78px;font-size:30px;">▲</button>';
+          body.appendChild(pad);
+
+          // Bind a button to a key flag (press = down, release = up).
+          function bindHold(sel, key) {
+            var el = pad.querySelector(sel);
+            function down(e) {
+              e.preventDefault();
+              if (state !== "flying") { softRetry(); return; }
+              keys[key] = true;
+            }
+            function up(e) { e.preventDefault(); keys[key] = false; }
+            el.addEventListener("pointerdown", down);
+            el.addEventListener("pointerup", up);
+            el.addEventListener("pointerleave", up);
+            el.addEventListener("pointercancel", up);
+          }
+          bindHold(".np-left", "arrowleft");
+          bindHold(".np-right", "arrowright");
+          bindHold(".np-thrust", "arrowup");
+        }
+
         /* ---------- physics ---------- */
         var G = 0.06;
         function update() {

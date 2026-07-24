@@ -24,7 +24,7 @@ window.NomuMobile = (function () {
     { type: "app", id: "editor" },
     { type: "app", id: "calc" },
     { type: "app", id: "calendar" },
-    { type: "app", id: "terminal" },
+    { type: "app", id: "nothing" },
     { type: "app", id: "settings" },
   ];
   var DOCK = [
