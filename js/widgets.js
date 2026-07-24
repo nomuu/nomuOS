@@ -215,6 +215,8 @@ window.NomuWidgets = (function () {
   function makeDraggable(inst, handle) {
     var sx, sy, ox, oy, dragging = false;
     handle.addEventListener("mousedown", function (e) {
+      // While gravity is on, the physics engine owns dragging.
+      if (window.NomuGravity && NomuGravity.isEnabled && NomuGravity.isEnabled()) return;
       if (e.button !== 0) return;
       if (e.target.classList.contains("wd-close")) return;
       dragging = true;

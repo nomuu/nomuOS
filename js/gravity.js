@@ -61,6 +61,7 @@ window.NomuGravity = (function () {
   function collectEls() {
     var els = [];
     document.querySelectorAll("#desktop-icons .desktop-icon").forEach(function (e) { els.push(e); });
+    document.querySelectorAll("#widget-layer .widget").forEach(function (e) { els.push(e); });
     var taskbar = document.getElementById("taskbar");
     if (taskbar) els.push(taskbar);
     els.push(toggleBtn);
@@ -139,7 +140,7 @@ window.NomuGravity = (function () {
   /* ---------------- drag / throw ---------------- */
   function onDown(e) {
     if (!enabled) return;
-    var el = e.target.closest(".desktop-icon, #gravity-toggle, #taskbar");
+    var el = e.target.closest(".desktop-icon, .widget, #gravity-toggle, #taskbar");
     if (!el) return;
     var b = bodyOf(el);
     if (!b) return;
@@ -224,5 +225,5 @@ window.NomuGravity = (function () {
     // keep the floor sensible on resize (step() already reads live values)
   }
 
-  return { init: init, enable: enable, disable: disable, toggle: toggle };
+  return { init: init, enable: enable, disable: disable, toggle: toggle, isEnabled: function () { return enabled; } };
 })();
