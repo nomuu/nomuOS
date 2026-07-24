@@ -122,6 +122,7 @@ window.NomuApps.terminal = {
               "  exit              close the terminal\n" +
               "  gravity on|off    toggle desktop gravity 🪐\n" +
               "  shutdown          turn off NomuOS… or not 😉\n" +
+              "  apt install <pkg> install a package… supposedly 📦\n" +
               "  date              current date/time\n" +
               "  whoami            current user\n" +
               "  neofetch          system info\n" +
@@ -190,6 +191,38 @@ window.NomuApps.terminal = {
           shutdown: function () {
             print("Shutting down NomuOS…");
             fakeShutdown();
+          },
+          apt: function (args) {
+            if ((args[0] || "") !== "install") { print("usage: apt install <package>", "err"); return; }
+            var pkg = args.slice(1).join(" ") || "mystery-package";
+            var size = (Math.floor(Math.random() * 9000) + 500).toLocaleString();
+            print("Reading package lists... Done");
+            print("Building dependency tree... Done");
+            print("The following NEW package will be installed:");
+            print("  " + pkg);
+            print("Need to get " + size + " kB of archives.");
+
+            var line = document.createElement("div");
+            line.className = "term-line";
+            out.appendChild(line);
+
+            var pct = 0;
+            var timer = setInterval(function () {
+              pct = Math.min(100, pct + Math.floor(Math.random() * 12) + 5);
+              var filled = Math.round(pct / 5);           // 20-block bar
+              var bar = "[" + Array(filled + 1).join("#") + Array(20 - filled + 1).join(" ") + "]";
+              line.textContent = "Get:1 " + pkg + "  " + bar + " " + pct + "%";
+              out.scrollTop = out.scrollHeight;
+              if (pct >= 100) {
+                clearInterval(timer);
+                setTimeout(function () {
+                  print("Unpacking " + pkg + " (1.0.0) ...");
+                  print("Setting up " + pkg + " (1.0.0) ...");
+                  print("Naisip mong totoo? 😂 Walang '" + pkg + "' talaga — chika lang.");
+                  print("0 upgraded, 0 newly installed, 1 joke served.");
+                }, 400);
+              }
+            }, 220);
           },
           exit: function () {
             print("logout");
