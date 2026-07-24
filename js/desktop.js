@@ -250,7 +250,7 @@ window.NomuDesktop = (function () {
     if (val === LOCK_PASSWORD) {
       unlock();
     } else {
-      if (err) err.textContent = "Incorrect password. Try again.";
+      if (err) err.textContent = "kailangan mong tanggapin na cute si nomu";
       var inner = document.querySelector("#lockscreen .lock-inner");
       if (inner) {
         inner.classList.remove("shake");
