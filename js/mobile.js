@@ -28,6 +28,7 @@ window.NomuMobile = (function () {
     { type: "app", id: "calc" },
     { type: "app", id: "calendar" },
     { type: "app", id: "nothing" },
+    { type: "app", id: "kofi" },
     { type: "app", id: "settings" },
   ];
   var DOCK = [
@@ -330,6 +331,9 @@ window.NomuMobile = (function () {
         '<button class="m-cc-settings" style="' + btnCss + '">⚙️ Settings</button>' +
         '<button class="m-cc-lock" style="' + btnCss + '">🔒 Lock</button>' +
       "</div>" +
+      '<button class="m-cc-kofi" style="width:100%;margin-top:12px;padding:12px;' +
+        "border-radius:16px;border:none;cursor:pointer;background:#72a4f2;color:#fff;" +
+        'font:600 14px \'Segoe UI\',sans-serif;">☕ kape kape? — Buy nomu a coffee</button>' +
       '<div style="width:44px;height:5px;border-radius:999px;background:rgba(255,255,255,.4);' +
         'margin:16px auto 0;"></div>';
 
@@ -359,6 +363,10 @@ window.NomuMobile = (function () {
     panel.querySelector(".m-cc-lock").addEventListener("click", function () {
       closeControlCenter();
       lock();
+    });
+    panel.querySelector(".m-cc-kofi").addEventListener("click", function () {
+      closeControlCenter();
+      launchApp("kofi");
     });
     // tap the backdrop (outside the panel) to dismiss
     ccEl.addEventListener("click", function (e) { if (e.target === ccEl) closeControlCenter(); });

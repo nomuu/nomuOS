@@ -62,6 +62,8 @@ window.NomuGravity = (function () {
     var els = [];
     document.querySelectorAll("#desktop-icons .desktop-icon").forEach(function (e) { els.push(e); });
     document.querySelectorAll("#widget-layer .widget").forEach(function (e) { els.push(e); });
+    var kofi = document.getElementById("kofi-pin");
+    if (kofi) els.push(kofi);
     var taskbar = document.getElementById("taskbar");
     if (taskbar) els.push(taskbar);
     els.push(toggleBtn);
@@ -140,7 +142,7 @@ window.NomuGravity = (function () {
   /* ---------------- drag / throw ---------------- */
   function onDown(e) {
     if (!enabled) return;
-    var el = e.target.closest(".desktop-icon, .widget, #gravity-toggle, #taskbar");
+    var el = e.target.closest(".desktop-icon, .widget, #gravity-toggle, #taskbar, #kofi-pin");
     if (!el) return;
     var b = bodyOf(el);
     if (!b) return;
