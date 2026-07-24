@@ -27,6 +27,18 @@ window.NomuWM = (function () {
     windows.forEach(function (o) {
       if (o.taskEl) o.taskEl.classList.toggle("active", o.id === id);
     });
+    syncMaxState();
+  }
+
+  // Reflect on <body> whether a maximized (fullscreen) window is currently
+  // visible, so CSS can tuck the always-on-top gravity toggle and coffee pin
+  // behind it instead of letting them overlap the app.
+  function syncMaxState() {
+    var anyMax = false;
+    for (var i = 0; i < windows.length; i++) {
+      if (windows[i].maximized && !windows[i].minimized) { anyMax = true; break; }
+    }
+    document.body.classList.toggle("wm-maximized", anyMax);
   }
 
   function find(id) {
@@ -156,6 +168,7 @@ window.NomuWM = (function () {
     }
 
     w.api = api;
+    if (opts.maximized) toggleMax(id);
     return api;
   }
 
@@ -169,6 +182,7 @@ window.NomuWM = (function () {
     for (var i = windows.length - 1; i >= 0; i--) {
       if (!windows[i].minimized && windows[i].id !== id) { focus(windows[i].id); break; }
     }
+    syncMaxState();
   }
 
   function restore(id) {
@@ -212,6 +226,7 @@ window.NomuWM = (function () {
       activeId = null;
       if (windows.length) focus(windows[windows.length - 1].id);
     }
+    syncMaxState();
   }
 
   function makeDraggable(w, handle) {

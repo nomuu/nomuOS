@@ -189,14 +189,37 @@ window.NomuScreensaver = (function () {
   }
 
   /* ---------------- init ---------------- */
+  // Focus sitting inside a framed page (e.g. a site loaded in Browie). We
+  // cannot observe key/mouse events inside a cross-origin iframe, so we treat
+  // "an iframe currently holds focus" as the user being active there.
+  function iframeFocused() {
+    var el = document.activeElement;
+    return !!(el && el.tagName === "IFRAME");
+  }
+
   function init() {
     if (initialized) { arm(); return; }
     initialized = true;
 
     var evts = ["mousemove", "mousedown", "keydown", "wheel", "touchstart", "touchmove"];
+    // Listen on window in the capture phase so activity is caught even if an
+    // app calls stopPropagation before the event reaches document-level handlers.
     evts.forEach(function (ev) {
-      document.addEventListener(ev, onActivity, { passive: true });
+      window.addEventListener(ev, onActivity, { passive: true, capture: true });
     });
+
+    // Keyboard events only reach us while NomuOS's own document holds focus.
+    // Once focus moves into a framed page (Browie), keystrokes go to that frame
+    // instead, so the idle countdown would fire even while the user is typing.
+    // Reset when focus lands on an iframe, and keep it awake while the tab is
+    // focused and an iframe stays active.
+    window.addEventListener("blur", function () {
+      setTimeout(function () { if (iframeFocused()) onActivity(); }, 0);
+    }, true);
+    setInterval(function () {
+      if (document.hasFocus() && iframeFocused()) onActivity();
+    }, 15000);
+
     // Pause countdown when tab is hidden; re-arm when it returns.
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) { clearTimeout(timer); }
