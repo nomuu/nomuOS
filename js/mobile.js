@@ -146,6 +146,8 @@ window.NomuMobile = (function () {
 
     var body = el.querySelector(".m-appbody");
     el.querySelector(".m-nav-title").textContent = opts.title || "App";
+    var navEl = el.querySelector(".m-nav");
+    if (navEl) navEl.style.touchAction = "none"; // let top swipe-down open Control Center
     sheetLayer.appendChild(el);
 
     var handle = {
@@ -267,26 +269,11 @@ window.NomuMobile = (function () {
     switcherEl = null;
   }
 
-  // Home indicator: tap = minimize to home; swipe up = open the app switcher.
+  // Home indicator: tap = minimize the current app to home.
   function wireHomeBar() {
     var bar = root.querySelector("#m-homebar");
     if (!bar) return;
-    var startY = 0, startX = 0, moved = false, tracking = false;
-    bar.style.touchAction = "none";
-    bar.addEventListener("pointerdown", function (e) {
-      tracking = true; moved = false; startY = e.clientY; startX = e.clientX;
-    });
-    window.addEventListener("pointermove", function (e) {
-      if (!tracking) return;
-      if (Math.abs(e.clientY - startY) > 8 || Math.abs(e.clientX - startX) > 8) moved = true;
-    });
-    window.addEventListener("pointerup", function (e) {
-      if (!tracking) return;
-      tracking = false;
-      var dy = startY - e.clientY; // positive = swipe up
-      if (dy > 40) openSwitcher();
-      else if (!moved) { if (activeSheet) goHome(); else openSwitcher(); }
-    });
+    bar.addEventListener("click", function () { if (activeSheet) goHome(); });
   }
 
   /* ---------------- Control Center (swipe down from the top) ---------------- */
@@ -389,23 +376,27 @@ window.NomuMobile = (function () {
     ccEl = null;
   }
 
-  // Top edge: swipe down = open Control Center.
-  function wireControlCenter() {
-    var startY = 0, startX = 0, fromTop = false, tracking = false;
+  // Edge swipes: from the top = Control Center · up from the bottom = App Switcher.
+  // Detection happens on pointermove so it still fires if a touch scroll cancels
+  // the pointerup (common on real touch devices).
+  function wireGestures() {
+    var sY = 0, sX = 0, edge = 0, fired = false; // edge: 1 = top, 2 = bottom
     root.addEventListener("pointerdown", function (e) {
-      if (switcherEl || ccEl) { tracking = false; return; }
-      var top = root.getBoundingClientRect().top;
-      fromTop = (e.clientY - top) <= 40;
-      if (!fromTop) { tracking = false; return; }
-      tracking = true; startY = e.clientY; startX = e.clientX;
+      fired = false; edge = 0;
+      if (switcherEl || ccEl) return;
+      var r = root.getBoundingClientRect();
+      if (e.clientY - r.top <= 64) { edge = 1; sY = e.clientY; sX = e.clientX; }
+      else if (r.bottom - e.clientY <= 44) { edge = 2; sY = e.clientY; sX = e.clientX; }
     });
-    window.addEventListener("pointerup", function (e) {
-      if (!tracking) return;
-      tracking = false;
-      var dy = e.clientY - startY;             // positive = swipe down
-      var dx = Math.abs(e.clientX - startX);
-      if (dy > 50 && dy > dx) openControlCenter();
+    root.addEventListener("pointermove", function (e) {
+      if (!edge || fired) return;
+      var dy = e.clientY - sY, dx = Math.abs(e.clientX - sX);
+      if (edge === 1 && dy > 45 && dy > dx) { fired = true; openControlCenter(); }
+      else if (edge === 2 && -dy > 45 && -dy > dx) { fired = true; openSwitcher(); }
     });
+    var clear = function () { edge = 0; };
+    window.addEventListener("pointerup", clear);
+    window.addEventListener("pointercancel", clear);
   }
 
   /* ---------------- Status bar clock ---------------- */
@@ -555,10 +546,25 @@ window.NomuMobile = (function () {
     buildHome();
     startClock();
 
-    // Home indicator: tap = minimize · swipe up = app switcher.
+    // Edge zones must not eat the drag as a native scroll, or pointermove never
+    // fires on touch devices. touch-action:none still allows normal taps/clicks.
+    [".m-statusbar", ".m-home-head", "#m-dock", "#m-homebar"].forEach(function (sel) {
+      var el = root.querySelector(sel);
+      if (el) el.style.touchAction = "none";
+    });
+    // Transparent full-width strip along the very bottom so the swipe-up gesture
+    // works everywhere (even inside an open app), not just on the thin home bar.
+    var botStrip = document.createElement("div");
+    botStrip.className = "m-swipe-bottom";
+    botStrip.style.cssText =
+      "position:absolute;left:0;right:0;bottom:0;height:22px;z-index:59;" +
+      "touch-action:none;background:transparent;";
+    root.appendChild(botStrip);
+
+    // Home indicator: tap = minimize.
     wireHomeBar();
-    // Top edge: swipe down = Control Center (quick settings).
-    wireControlCenter();
+    // Edge swipes: down from top = Control Center · up from bottom = App Switcher.
+    wireGestures();
 
     if (window.NomuScreensaver) NomuScreensaver.init();
   }
