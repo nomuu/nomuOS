@@ -29,6 +29,7 @@ window.NomuApps.projects = {
       .join("");
 
     NomuWM.open({
+      key: "project:" + (proj.name || proj.url || "project"),
       title: proj.name || "Project",
       icon: "🗂️",
       width: 440,
@@ -55,6 +56,7 @@ window.NomuApps.projects = {
     var others = data.others || [];
 
     NomuWM.open({
+      key: "projects",
       title: "Projects",
       icon: "🗂️",
       width: 600,

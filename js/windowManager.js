@@ -34,9 +34,18 @@ window.NomuWM = (function () {
     return null;
   }
 
+  // Find an already-open window by its singleton key (see open()'s opts.key).
+  function findByKey(key) {
+    if (key == null) return null;
+    for (var i = 0; i < windows.length; i++) if (windows[i].key === key) return windows[i];
+    return null;
+  }
+
   /**
    * open(opts)
-   * opts: { title, icon, width, height, x, y, render(bodyEl, api) }
+   * opts: { title, icon, width, height, x, y, key, render(bodyEl, api) }
+   * If opts.key is set and a window with that key is already open, that window
+   * is restored + focused instead of opening a duplicate (single-instance apps).
    * returns window handle { id, el, body, close, setTitle }
    */
   function open(opts) {
@@ -45,6 +54,17 @@ window.NomuWM = (function () {
       return NomuMobile.presentApp(opts || {});
     }
     opts = opts || {};
+
+    // Single-instance: if this app is already open, focus it instead of duplicating.
+    if (opts.key != null) {
+      var existing = findByKey(opts.key);
+      if (existing) {
+        if (existing.minimized) restore(existing.id);
+        focus(existing.id);
+        return existing.api;
+      }
+    }
+
     var id = ++idCounter;
     var width = opts.width || 520;
     var height = opts.height || 380;
@@ -86,6 +106,7 @@ window.NomuWM = (function () {
 
     var w = {
       id: id, el: el, title: opts.title || "Window", icon: icon,
+      key: opts.key != null ? opts.key : null, api: null,
       minimized: false, maximized: false, prevRect: null, taskEl: null,
     };
     windows.push(w);
@@ -134,6 +155,7 @@ window.NomuWM = (function () {
       catch (err) { body.innerHTML = '<div class="app-pad">App failed to load: ' + err + '</div>'; }
     }
 
+    w.api = api;
     return api;
   }
 

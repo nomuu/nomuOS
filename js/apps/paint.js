@@ -19,6 +19,7 @@ window.NomuApps.paint = {
     var currentPath = (path && NomuFS.isFile(path)) ? NomuFS.normalize(path) : null;
 
     NomuWM.open({
+      key: "paint:" + (currentPath || "new"),
       title: currentPath ? "Paint — " + currentPath.split("/").pop() : "Paint",
       icon: "🎨",
       width: 640,

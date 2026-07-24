@@ -12,6 +12,7 @@ window.NomuApps.editor = {
     var title = currentPath ? "Editor — " + currentPath.split("/").pop() : "Text Editor";
 
     NomuWM.open({
+      key: "editor:" + (currentPath || "new"),
       title: title,
       icon: "📝",
       width: 560,

@@ -9,6 +9,7 @@ window.NomuApps.contact = {
     var c = p.contact || {};
 
     NomuWM.open({
+      key: "contact",
       title: "Contact",
       icon: "✉️",
       width: 480,

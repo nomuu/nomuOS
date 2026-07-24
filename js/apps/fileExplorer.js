@@ -10,6 +10,7 @@ window.NomuApps.files = {
     var atThisPC = false;
 
     NomuWM.open({
+      key: "files:" + cwd,
       title: "File Explorer",
       icon: "📁",
       width: 560,

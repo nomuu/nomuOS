@@ -8,6 +8,7 @@ window.NomuApps.terminal = {
     var cwd = "/home/ronald";
 
     NomuWM.open({
+      key: "terminal",
       title: "Terminal",
       icon: "🖥️",
       width: 600,

@@ -56,6 +56,7 @@ window.NomuApps.settings = {
   icon: "⚙️",
   open: function () {
     NomuWM.open({
+      key: "settings",
       title: "Settings",
       icon: "⚙️",
       width: 480,

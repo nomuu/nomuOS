@@ -10,6 +10,7 @@ window.NomuApps.browie = {
    */
   open: function (startUrl) {
     NomuWM.open({
+      key: "browie:" + (startUrl || "home"),
       title: "Browie",
       icon: "🌐",
       width: 760,

@@ -6,6 +6,7 @@ window.NomuApps.calendar = {
   icon: "📅",
   open: function () {
     NomuWM.open({
+      key: "calendar",
       title: "Calendar",
       icon: "📅",
       width: 380,

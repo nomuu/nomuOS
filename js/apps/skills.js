@@ -9,6 +9,7 @@ window.NomuApps.skills = {
     var s = p.skills || {};
 
     NomuWM.open({
+      key: "skills",
       title: "Skills",
       icon: "🧩",
       width: 540,

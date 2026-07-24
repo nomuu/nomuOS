@@ -9,6 +9,7 @@ window.NomuApps.about = {
     var a = p.about || {};
 
     NomuWM.open({
+      key: "about",
       title: "About Me",
       icon: "👤",
       width: 520,

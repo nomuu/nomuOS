@@ -6,6 +6,7 @@ window.NomuApps.calc = {
   icon: "🧮",
   open: function () {
     NomuWM.open({
+      key: "calc",
       title: "Calculator",
       icon: "🧮",
       width: 300,
