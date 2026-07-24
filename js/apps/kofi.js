@@ -17,16 +17,24 @@ window.NomuApps.kofi = {
         var link = (p.support && p.support.url) || p.kofi || p.coffee ||
           ((p.contact || {}).kofi) || KOFI;
 
-        var PRICE = 50, TIERS = [1, 3, 5], mult = 1;
-        function coffees(t) { return "☕".repeat(t); }
+        var PRICE = 50, mult = 1;
+        var TIERS = [
+          { mult: 1, label: "konte", size: 20 },
+          { mult: 3, label: "saks", size: 28 },
+          { mult: 5, label: "busolb", size: 36 },
+        ];
 
         function render() {
           var tiers = TIERS.map(function (t) {
-            var on = t === mult;
-            return '<button class="kfa-tier" data-t="' + t + '" style="flex:1;padding:12px 0;' +
-              "border-radius:12px;cursor:pointer;font-size:15px;color:#fff;border:1px solid " +
+            var on = t.mult === mult;
+            return '<button class="kfa-tier" data-t="' + t.mult + '" style="flex:1;padding:12px 0;' +
+              "display:flex;flex-direction:column;align-items:center;gap:6px;" +
+              "border-radius:12px;cursor:pointer;color:#fff;border:1px solid " +
               (on ? "#72a4f2" : "rgba(255,255,255,.2)") + ";background:" +
-              (on ? "#72a4f2" : "rgba(255,255,255,.06)") + ';">' + coffees(t) + "</button>";
+              (on ? "#72a4f2" : "rgba(255,255,255,.06)") + ';">' +
+              '<span style="height:38px;display:flex;align-items:flex-end;justify-content:center;">' +
+                '<span style="font-size:' + t.size + 'px;line-height:1;">☕</span></span>' +
+              '<span style="font-size:13px;">' + t.label + "</span></button>";
           }).join("");
 
           body.innerHTML =

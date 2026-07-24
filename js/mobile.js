@@ -303,6 +303,21 @@ window.NomuMobile = (function () {
     var btnCss = "flex:1;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.18);" +
       "background:rgba(255,255,255,.12);color:#fff;font:600 14px 'Segoe UI',sans-serif;cursor:pointer;";
 
+    // Ko-fi coffee tiers (icon + name), matching the desktop card / mobile app.
+    var KTIERS = [
+      { label: "konte", size: 20 },
+      { label: "saks", size: 27 },
+      { label: "busolb", size: 34 },
+    ];
+    var kofiTiers = KTIERS.map(function (t) {
+      return '<button class="m-cc-kofitier" style="flex:1;padding:10px 0;border-radius:12px;cursor:pointer;' +
+        "color:#fff;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);" +
+        'display:flex;flex-direction:column;align-items:center;gap:5px;">' +
+        '<span style="height:36px;display:flex;align-items:flex-end;justify-content:center;">' +
+          '<span style="font-size:' + t.size + 'px;line-height:1;">☕</span></span>' +
+        '<span style="font-size:12px;">' + t.label + "</span></button>";
+    }).join("");
+
     ccEl = document.createElement("div");
     ccEl.className = "m-cc";
     ccEl.style.cssText =
@@ -331,9 +346,11 @@ window.NomuMobile = (function () {
         '<button class="m-cc-settings" style="' + btnCss + '">⚙️ Settings</button>' +
         '<button class="m-cc-lock" style="' + btnCss + '">🔒 Lock</button>' +
       "</div>" +
-      '<button class="m-cc-kofi" style="width:100%;margin-top:12px;padding:12px;' +
-        "border-radius:16px;border:none;cursor:pointer;background:#72a4f2;color:#fff;" +
-        'font:600 14px \'Segoe UI\',sans-serif;">☕ kape kape? — Buy nomu a coffee</button>' +
+      '<div style="margin-top:12px;padding:12px;border-radius:16px;background:rgba(255,255,255,.06);' +
+        'border:1px solid rgba(255,255,255,.14);">' +
+        '<div style="font:600 13px \'Segoe UI\',sans-serif;margin-bottom:10px;">☕ Buy nomu a coffee</div>' +
+        '<div style="display:flex;gap:8px;">' + kofiTiers + "</div>" +
+      "</div>" +
       '<div style="width:44px;height:5px;border-radius:999px;background:rgba(255,255,255,.4);' +
         'margin:16px auto 0;"></div>';
 
@@ -364,9 +381,11 @@ window.NomuMobile = (function () {
       closeControlCenter();
       lock();
     });
-    panel.querySelector(".m-cc-kofi").addEventListener("click", function () {
-      closeControlCenter();
-      launchApp("kofi");
+    panel.querySelectorAll(".m-cc-kofitier").forEach(function (b) {
+      b.addEventListener("click", function () {
+        closeControlCenter();
+        launchApp("kofi");
+      });
     });
     // tap the backdrop (outside the panel) to dismiss
     ccEl.addEventListener("click", function (e) { if (e.target === ccEl) closeControlCenter(); });

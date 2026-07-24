@@ -159,7 +159,12 @@ window.NomuWidgets = (function () {
     var KOFI = "https://ko-fi.com/N4N319W8W";
     var link = (p.support && p.support.url) || p.kofi || p.coffee ||
       ((p.contact || {}).kofi) || KOFI;
-    var PRICE = 50, TIERS = [1, 3, 5], mult = 1;
+    var PRICE = 50, mult = 1;
+    var TIERS = [
+      { mult: 1, label: "konte", size: 15 },
+      { mult: 3, label: "saks", size: 21 },
+      { mult: 5, label: "busolb", size: 27 },
+    ];
 
     var card = document.createElement("div");
     card.id = "kofi-pin";
@@ -171,14 +176,17 @@ window.NomuWidgets = (function () {
       "-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);" +
       "box-shadow:0 8px 22px rgba(0,0,0,.3);";
 
-    function coffees(t) { return "☕".repeat(t); }
     function render() {
       var tiers = TIERS.map(function (t) {
-        var on = t === mult;
-        return '<button class="kfp-tier" data-t="' + t + '" style="flex:1;padding:7px 0;' +
-          "border-radius:10px;cursor:pointer;font-size:12px;color:#fff;border:1px solid " +
+        var on = t.mult === mult;
+        return '<button class="kfp-tier" data-t="' + t.mult + '" style="flex:1;padding:8px 0;' +
+          "display:flex;flex-direction:column;align-items:center;gap:4px;" +
+          "border-radius:10px;cursor:pointer;color:#fff;border:1px solid " +
           (on ? "#72a4f2" : "rgba(255,255,255,.18)") + ";background:" +
-          (on ? "#72a4f2" : "rgba(255,255,255,.06)") + ';">' + coffees(t) + "</button>";
+          (on ? "#72a4f2" : "rgba(255,255,255,.06)") + ';">' +
+          '<span style="height:28px;display:flex;align-items:flex-end;justify-content:center;">' +
+            '<span style="font-size:' + t.size + 'px;line-height:1;">☕</span></span>' +
+          '<span style="font-size:11px;">' + t.label + "</span></button>";
       }).join("");
       card.innerHTML =
         '<div style="font-weight:700;font-size:14px;">Buy nomu a coffee ☕</div>' +
