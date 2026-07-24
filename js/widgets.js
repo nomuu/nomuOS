@@ -136,12 +136,70 @@ window.NomuWidgets = (function () {
         ta.addEventListener("mousedown", function (e) { e.stopPropagation(); });
       },
     },
+
   };
+
 
   function openApp(id) {
     if (window.NomuApps && window.NomuApps[id] && typeof window.NomuApps[id].open === "function") {
       window.NomuApps[id].open();
     }
+  }
+
+  /* ---------------- Pinned Ko-fi card ----------------
+     Always-on, non-closable card pinned under the gravity toggle.
+     Not a draggable widget and not in the picker; lives in #desktop
+     so the lock screen still covers it, but it can never be hidden
+     by the user. */
+  function buildCoffeePin() {
+    var host = document.getElementById("desktop");
+    if (!host || document.getElementById("kofi-pin")) return;
+
+    var p = window.NomuProfile || {};
+    var KOFI = "https://ko-fi.com/N4N319W8W";
+    var link = (p.support && p.support.url) || p.kofi || p.coffee ||
+      ((p.contact || {}).kofi) || KOFI;
+    var PRICE = 50, TIERS = [1, 3, 5], mult = 1;
+
+    var card = document.createElement("div");
+    card.id = "kofi-pin";
+    card.className = "kofi-pin";
+    card.style.cssText =
+      "position:fixed;top:60px;right:16px;z-index:5990;width:236px;padding:14px;" +
+      "border-radius:16px;color:#fff;font-family:var(--font,'Segoe UI',sans-serif);" +
+      "background:rgba(20,24,51,.55);backdrop-filter:blur(10px);" +
+      "-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);" +
+      "box-shadow:0 8px 22px rgba(0,0,0,.3);";
+
+    function coffees(t) { return "☕".repeat(t); }
+    function render() {
+      var tiers = TIERS.map(function (t) {
+        var on = t === mult;
+        return '<button class="kfp-tier" data-t="' + t + '" style="flex:1;padding:7px 0;' +
+          "border-radius:10px;cursor:pointer;font-size:12px;color:#fff;border:1px solid " +
+          (on ? "#72a4f2" : "rgba(255,255,255,.18)") + ";background:" +
+          (on ? "#72a4f2" : "rgba(255,255,255,.06)") + ';">' + coffees(t) + "</button>";
+      }).join("");
+      card.innerHTML =
+        '<div style="font-weight:700;font-size:14px;">Buy nomu a coffee ☕</div>' +
+        '<div style="font-size:12px;opacity:.8;margin:2px 0 10px;">Support nomu on Ko-fi ☕</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:10px;">' + tiers + "</div>" +
+        '<button class="kfp-go" style="width:100%;padding:9px;border-radius:12px;border:none;' +
+          'cursor:pointer;background:#72a4f2;color:#fff;font-weight:600;font-size:13px;">' +
+          "Support on Ko-fi · ₱" + (mult * PRICE) + " →</button>" +
+        '<div class="kfp-thanks" style="font-size:12px;color:var(--accent-2,#21d4fd);' +
+          'min-height:16px;margin-top:8px;text-align:center;"></div>';
+      card.querySelectorAll(".kfp-tier").forEach(function (b) {
+        b.addEventListener("click", function () { mult = parseInt(b.getAttribute("data-t"), 10); render(); });
+      });
+      card.querySelector(".kfp-go").addEventListener("click", function () {
+        window.open(link, "_blank", "noopener");
+        var t = card.querySelector(".kfp-thanks");
+        if (t) t.textContent = "Maraming salamat! 💛";
+      });
+    }
+    render();
+    host.appendChild(card);
   }
 
   /* ---------------- Persistence ---------------- */
@@ -360,6 +418,9 @@ window.NomuWidgets = (function () {
       });
     }
     // No auto-added widgets on first load — the desktop starts clean.
+
+    // The Ko-fi card is always pinned under the gravity toggle (not closable).
+    buildCoffeePin();
 
     tickClocks();
     setInterval(tickClocks, 1000);
