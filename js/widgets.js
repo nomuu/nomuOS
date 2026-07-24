@@ -155,16 +155,7 @@ window.NomuWidgets = (function () {
     var host = document.getElementById("desktop");
     if (!host || document.getElementById("kofi-pin")) return;
 
-    var p = window.NomuProfile || {};
-    var KOFI = "https://ko-fi.com/N4N319W8W";
-    var link = (p.support && p.support.url) || p.kofi || p.coffee ||
-      ((p.contact || {}).kofi) || KOFI;
-    var PRICE = 50, mult = 1;
-    var TIERS = [
-      { mult: 1, label: "konte", size: 15 },
-      { mult: 3, label: "saks", size: 21 },
-      { mult: 5, label: "busolb", size: 27 },
-    ];
+    var GCASH_QR = "img/qr/gcash.png";
 
     var card = document.createElement("div");
     card.id = "kofi-pin";
@@ -177,33 +168,24 @@ window.NomuWidgets = (function () {
       "box-shadow:0 8px 22px rgba(0,0,0,.3);";
 
     function render() {
-      var tiers = TIERS.map(function (t) {
-        var on = t.mult === mult;
-        return '<button class="kfp-tier" data-t="' + t.mult + '" style="flex:1;padding:8px 0;' +
-          "display:flex;flex-direction:column;align-items:center;gap:4px;" +
-          "border-radius:10px;cursor:pointer;color:#fff;border:1px solid " +
-          (on ? "#72a4f2" : "rgba(255,255,255,.18)") + ";background:" +
-          (on ? "#72a4f2" : "rgba(255,255,255,.06)") + ';">' +
-          '<span style="height:28px;display:flex;align-items:flex-end;justify-content:center;">' +
-            '<span style="font-size:' + t.size + 'px;line-height:1;">☕</span></span>' +
-          '<span style="font-size:11px;">' + t.label + "</span></button>";
-      }).join("");
       card.innerHTML =
-        '<div style="font-weight:700;font-size:14px;">Buy nomu a coffee ☕</div>' +
-        '<div style="font-size:12px;opacity:.8;margin:2px 0 10px;">Support nomu on Ko-fi ☕</div>' +
-        '<div style="display:flex;gap:8px;margin-bottom:10px;">' + tiers + "</div>" +
-        '<button class="kfp-go" style="width:100%;padding:9px;border-radius:12px;border:none;' +
+        '<div style="font-size:40px;line-height:1;text-align:center;margin-bottom:12px;">☕</div>' +
+        '<button class="kfp-go" style="width:100%;padding:10px;border-radius:12px;border:none;' +
           'cursor:pointer;background:#72a4f2;color:#fff;font-weight:600;font-size:13px;">' +
-          "Support on Ko-fi · ₱" + (mult * PRICE) + " →</button>" +
-        '<div class="kfp-thanks" style="font-size:12px;color:var(--accent-2,#21d4fd);' +
-          'min-height:16px;margin-top:8px;text-align:center;"></div>';
-      card.querySelectorAll(".kfp-tier").forEach(function (b) {
-        b.addEventListener("click", function () { mult = parseInt(b.getAttribute("data-t"), 10); render(); });
-      });
+          "you know, let me buy you a coffee</button>" +
+        '<div class="kfp-qr" style="display:none;background:#fff;border-radius:12px;padding:10px;' +
+          'margin-top:10px;text-align:center;">' +
+          '<img src="' + GCASH_QR + '" alt="GCash QR" ' +
+            'style="width:100%;max-width:180px;height:auto;display:block;margin:0 auto;border-radius:6px;" ' +
+            "onerror=\"this.style.display='none';this.nextElementSibling.style.display='block';\">" +
+          '<div style="display:none;color:#333;font-size:11px;line-height:1.5;padding:24px 6px;">' +
+            "Ilagay ang QR:<br>" + GCASH_QR + "</div>" +
+          '<div style="color:#333;font-size:12px;font-weight:600;margin-top:6px;">Salamat! 💛</div>' +
+        "</div>";
+      var qr = card.querySelector(".kfp-qr");
       card.querySelector(".kfp-go").addEventListener("click", function () {
-        window.open(link, "_blank", "noopener");
-        var t = card.querySelector(".kfp-thanks");
-        if (t) t.textContent = "Maraming salamat! 💛";
+        if (qr) qr.style.display = "block";
+        this.style.display = "none";
       });
     }
     render();
