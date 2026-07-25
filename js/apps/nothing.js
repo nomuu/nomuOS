@@ -102,7 +102,7 @@ window.NomuApps.nothing = {
         function placePickup(pk) {
           // find an open spot not buried inside a planet
           for (var tries = 0; tries < 20; tries++) {
-            var x = rand(-1600, 1600), y = rand(-1200, 1200);
+            var x = rand(-1200, 1200), y = rand(-900, 900);
             if (farFromPlanets(x, y)) { pk.x = x; pk.y = y; break; }
             pk.x = x; pk.y = y;
           }
@@ -111,7 +111,7 @@ window.NomuApps.nothing = {
         }
         function makePickups() {
           pickups = [];
-          for (var i = 0; i < 6; i++) {
+          for (var i = 0; i < 16; i++) {
             var pk = { x: 0, y: 0, r: 12, taken: false, respawn: 0, spin: rand(0, Math.PI * 2) };
             placePickup(pk);
             pickups.push(pk);
@@ -122,6 +122,8 @@ window.NomuApps.nothing = {
         /* ---------- ship ---------- */
         var ship, camX, camY, state, landings, msg, msgTimer;
         var SHIP_R = 9;
+        var trail = [];                 // breadcrumb of where the ship has been
+        var TRAIL_MAX = 900;            // how long the trail can get
         function reset() {
           ship = {
             x: 0, y: 0, vx: 0, vy: 0,
@@ -129,6 +131,7 @@ window.NomuApps.nothing = {
             thrusting: false,
             fuel: 100,
           };
+          trail = [];                    // wipe the trail on respawn
           camX = 0; camY = 0;
           state = "flying";          // flying | landed | crashed
           landings = landings || 0;  // keep running total across attempts
@@ -264,6 +267,13 @@ window.NomuApps.nothing = {
           ship.x += ship.vx;
           ship.y += ship.vy;
 
+          // drop a breadcrumb for the trail (skip tiny moves to save points)
+          var last = trail.length ? trail[trail.length - 1] : null;
+          if (!last || Math.hypot(ship.x - last.x, ship.y - last.y) > 3) {
+            trail.push({ x: ship.x, y: ship.y });
+            if (trail.length > TRAIL_MAX) trail.shift();
+          }
+
           // fuel pickups: collect on touch, respawn elsewhere after a delay
           for (var pi = 0; pi < pickups.length; pi++) {
             var pk = pickups[pi];
@@ -275,7 +285,7 @@ window.NomuApps.nothing = {
             if (Math.hypot(pk.x - ship.x, pk.y - ship.y) < pk.r + SHIP_R + 4) {
               ship.fuel = Math.min(100, ship.fuel + 35);
               pk.taken = true;
-              pk.respawn = 480;                          // ~8s at 60fps
+              pk.respawn = 210;                          // ~3.5s at 60fps
               msg = "⛽ +35 fuel";
               msgTimer = 120;
             }
@@ -352,6 +362,26 @@ window.NomuApps.nothing = {
           ctx.beginPath();
           ctx.moveTo(10, 0); ctx.lineTo(-6, -6); ctx.lineTo(-6, 6); ctx.closePath();
           ctx.fill();
+          ctx.restore();
+        }
+
+        function drawTrail() {
+          if (trail.length < 2) return;
+          ctx.save();
+          ctx.setLineDash([6, 6]);          // dashed breadcrumb line
+          ctx.lineWidth = 1.5;
+          ctx.lineJoin = "round";
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          for (var i = 0; i < trail.length; i++) {
+            var s = toScreen(trail[i].x, trail[i].y);
+            if (i === 0) ctx.moveTo(s.x, s.y);
+            else ctx.lineTo(s.x, s.y);
+          }
+          // fade older parts of the trail (newest = brightest)
+          ctx.strokeStyle = "rgba(33,212,253,0.55)";
+          ctx.stroke();
+          ctx.setLineDash([]);
           ctx.restore();
         }
 
@@ -473,6 +503,7 @@ window.NomuApps.nothing = {
           planets.forEach(drawPlanet);
           drawPickups();
           drawTargetArrow();
+          drawTrail();
           drawShip();
           drawHUD();
         }
