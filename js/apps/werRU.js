@@ -236,15 +236,14 @@ window.NomuApps.werRU = {
           for (var k = 0; k < n; k++) { out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]); }
           return out;
         }
-        // one place for the current query — changes on every keystroke
-        function onePlace(q) { return POOL[hashStr(q.toLowerCase()) % POOL.length]; }
+        // one place for the current query — RANDOM, so it changes every keystroke
+        // and gives a fresh result even if you retype the same name.
+        function onePlace(q) { return POOL[Math.floor(Math.random() * POOL.length)]; }
         function placePos(name, label) {
-          var rng = mulberry32(hashStr((name + "|" + label).toLowerCase()));
-          return { x: 300 + rng() * (MW - 600), y: 300 + rng() * (MH - 600) };
+          return { x: 300 + Math.random() * (MW - 600), y: 300 + Math.random() * (MH - 600) };
         }
         function etaFor(name, label) {
-          var rng = mulberry32(hashStr((label + name).toLowerCase()));
-          return ETAS[Math.floor(rng() * ETAS.length)];
+          return ETAS[Math.floor(Math.random() * ETAS.length)];
         }
 
         function renderSuggestions() {
