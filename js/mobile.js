@@ -30,6 +30,7 @@ window.NomuMobile = (function () {
     { type: "app", id: "calendar" },
     { type: "app", id: "nothing" },
     { type: "app", id: "spillTheTea" },
+    { type: "app", id: "werRU" },
     { type: "app", id: "kofi" },
     { type: "app", id: "settings" },
   ];
