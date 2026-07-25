@@ -56,6 +56,80 @@ window.NomuApps.werRU = {
           { e: "📮", t: "sa DM mo, request folder — di nabasa" },
           { e: "🚪", t: "exit na, 'wag mo nang habulin" },
           { e: "🛌", t: "nasa kama, online pero 'busy'" },
+          { e: "🍜", t: "sa Jollibee, nag-aabang ng Chickenjoy solo" },
+          { e: "🧎", t: "sa simbahan, dinadasal na sana ikaw na" },
+          { e: "🎣", t: "sa Seenzone Lake, tahimik lang" },
+          { e: "🪤", t: "sa mixed signals, di mo alam kung oo o hindi" },
+          { e: "🏦", t: "bangko ng feelings — insufficient balance" },
+          { e: "🧭", t: "lost sa sariling plano, walang direksyon" },
+          { e: "🛒", t: "sa abandoned cart, parang tayo" },
+          { e: "🎢", t: "emotional rollercoaster, hinay-hinay lang" },
+          { e: "🚏", t: "waiting shed ng 'balik tayo', di dumarating" },
+          { e: "🧨", t: "sa last message, na-leave on read" },
+          { e: "📉", t: "stocks ng relasyon, palugi ka na" },
+          { e: "🛗", t: "elevator ng pag-asa, stuck between floors" },
+          { e: "🧃", t: "sa juice ng chismis, sariwang tsaa" },
+          { e: "🪞", t: "harap ng salamin, kausap ang sarili" },
+          { e: "🛎️", t: "reception ng 'sana all', fully booked" },
+          { e: "🧦", t: "ilalim ng kama, kasama ang kabila ng medyas" },
+          { e: "🎯", t: "bullseye ng bad decisions, tama lagi" },
+          { e: "🧺", t: "labahan ng luma nating usapan" },
+          { e: "🕰️", t: "sa 'kahapon lang tayo', di na maibabalik" },
+          { e: "🏚️", t: "sa abandoned na Plan B" },
+          { e: "🧱", t: "likod ng pader na ginawa niya" },
+          { e: "🪫", t: "low bat na energy sa'yo, 1% na lang" },
+          { e: "🧀", t: "mousetrap ng 'pwede pa ba tayo'" },
+          { e: "🎈", t: "lumutang na feelings, pinakawalan na" },
+          { e: "🚿", t: "sa banyo, kumakanta ng hugot" },
+          { e: "🪁", t: "hinatid ng hangin papunta sa iba" },
+          { e: "🛑", t: "stop sign ng 'itutuloy pa ba'" },
+          { e: "🗺️", t: "nasa 'somewhere', GPS: nawawala" },
+          { e: "🎪", t: "karnabal ng mga palusot" },
+          { e: "📦", t: "balikbayan box ng dating pangako" },
+          { e: "🧗", t: "umaakyat pa rin ng expectations mo" },
+          { e: "🪜", t: "hagdan ng 'paakyat pa lang'" },
+          { e: "🎬", t: "blooper reel ng buhay natin" },
+          { e: "🧾", t: "resibo ng lahat ng ginawa ko — di binasa" },
+          { e: "🍧", t: "halo-halo ng emosyon, magulo" },
+          { e: "🛩️", t: "business class ng iba, economy tayo" },
+          { e: "🪷", t: "lotus pose, nagta-try mag-move on" },
+          { e: "🧊", t: "iced coffee mo — natunaw na parang tayo" },
+          { e: "🛠️", t: "repair shop ng broken promises" },
+          { e: "🎤", t: "sa videoke, kinakanta ang 'Kailangan Kita'" },
+          { e: "🧳", t: "nakabalot na, aalis na sa'yo" },
+          { e: "🪙", t: "wishing well, sana bumalik ka" },
+          { e: "🚢", t: "sumakay papuntang Move-On Island" },
+          { e: "🧻", t: "sa CR, naubusan ng dahilan" },
+          { e: "🎡", t: "ferris wheel ng 'paikot-ikot lang tayo'" },
+          { e: "🪃", t: "boomerang — babalik daw, di pa rin" },
+          { e: "🍳", t: "sa kusina, iniluluto ang gantihan" },
+          { e: "🚴", t: "pedal palayo, di lilingon" },
+          { e: "🧩", t: "puzzle ng 'ano ba tayo', kulang ang piece" },
+          { e: "🎓", t: "graduate na sa Umasa Academy" },
+          { e: "🪧", t: "may placard: 'wala nang chance'" },
+          { e: "🚦", t: "red light ng 'wag muna'" },
+          { e: "🏃", t: "fun run ng paglayo sa'yo, 1st placer" },
+          { e: "📴", t: "airplane mode ng puso niya, walang signal" },
+          { e: "🛟", t: "lifebuoy ng 'kaya mo pa 'yan, bestie'" },
+          { e: "🍚", t: "sa kanin ng 'palamig muna natin'" },
+          { e: "🧯", t: "friendzone fire exit — walang labasan" },
+          { e: "🕯️", t: "sa vigil ng namatay nating usapan" },
+          { e: "🛞", t: "spare tire — tinatawag lang kapag emergency" },
+          { e: "🧊", t: "sa freezer ng 'malamig na ang tanggapan'" },
+          { e: "🎠", t: "carousel ng paulit-ulit na paumanhin" },
+          { e: "🪺", t: "empty nest ng inabandunang plano" },
+          { e: "🛌", t: "power nap na naging 3-araw na hibernation" },
+          { e: "🧫", t: "lab ng ' te-test ko lang kung may pag-asa'" },
+          { e: "🚧", t: "under construction pa rin ang closure natin" },
+          { e: "🪟", t: "sa bintana, tinitignan ang wala" },
+          { e: "🧢", t: "sa 'cap' — puro ka arte, walang totoo" },
+          { e: "🛒", t: "check-out counter ng 'bili na kita ng oras'" },
+          { e: "🎧", t: "naka-headphones, di marinig ang paghingi mo ng atensyon" },
+          { e: "🪫", t: "sa charging port na sinira mo" },
+          { e: "🧊", t: "sa iced tea na tinunaw ng tampo" },
+          { e: "🗑️", t: "sa 'trash' folder ng pinaghirapang effort" },
+          { e: "🛁", t: "sa bathtub ng luha (charot)" },
+          { e: "🚀", t: "lumipad papuntang ibang tao, di ka pasahero" },
         ];
 
         var ETAS = [
@@ -66,6 +140,24 @@ window.NomuApps.werRU = {
           "Layo: buong EDSA · ETA: pag pumayag traffic (hindi)",
           "Layo: isang blocklist · ETA: paalis na siya",
           "Distansya: 3 milktea · ETA: pag single na siya (di malalaman)",
+          "Layo: 1 light year ng tampo · ETA: 'wag ka nang umasa",
+          "Distansya: 12 na 'kada' · ETA: pagkatapos ng kada (hindi)",
+          "Layo: kasing lalim ng utang · ETA: pag nabayaran (2099)",
+          "Distansya: 8 na 'busy' · ETA: kapag free na siya (never)",
+          "Layo: 3 payong ni Manong Guard · ETA: pag umulan ng pera",
+          "Distansya: 1 buong Grab surge · ETA: kapag bumaba (hehe)",
+          "Layo: 100 unread · ETA: kapag binasa (di mangyayari)",
+          "Distansya: 2 kanto at 1 hugot · ETA: paglaya mo sa kanya",
+          "Layo: kasing tagal ng buffering · ETA: 99%… tapos error",
+          "Distansya: isang malditang 'k' · ETA: end of conversation",
+          "Layo: 7 na 'maya na' · ETA: kahit kailan hindi",
+          "Distansya: full battery ng pasensya mo · ETA: 1% na lang",
+          "Layo: 1 typhoon signal ng drama · ETA: pag tumila (hindi)",
+          "Distansya: 5 airplane emoji · ETA: lumipad na, iniwan ka",
+          "Layo: 1 buong season na tiyaga · ETA: cancelled ang show",
+          "Distansya: 3 'sana all' · ETA: sana ikaw, pero hindi",
+          "Layo: kasing haba ng pila sa LTO · ETA: susunod na taon",
+          "Distansya: 2 ghosting · ETA: paglabas ng multo (mas maaga pa)",
         ];
 
         /* ---------- deterministic RNG (so a name always maps the same) --- */
@@ -215,7 +307,7 @@ window.NomuApps.werRU = {
             '<button class="wr-zout" style="width:40px;height:40px;border:0;border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:22px;color:#3c4043;cursor:pointer;">−</button>' +
           "</div>" +
           // attribution gag
-          '<div style="position:absolute;right:12px;top:14px;background:rgba(255,255,255,.8);border-radius:6px;padding:3px 8px;font-size:11px;color:#5f6368;pointer-events:none;">© NomuMaps · hindi totoong lugar 😅</div>';
+          '<div style="position:absolute;right:12px;top:14px;background:rgba(255,255,255,.8);border-radius:6px;padding:3px 8px;font-size:11px;color:#5f6368;pointer-events:none;">© NomuMaps</div>';
         body.appendChild(overlay);
 
         var input = overlay.querySelector(".wr-input");
@@ -393,45 +485,65 @@ window.NomuApps.werRU = {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
+        function tileRange() {
+          var lw = cam.x - (W / 2) / cam.z, rw = cam.x + (W / 2) / cam.z;
+          var tw = cam.y - (H / 2) / cam.z, bw = cam.y + (H / 2) / cam.z;
+          return {
+            i0: Math.floor(lw / MW), i1: Math.floor(rw / MW),
+            j0: Math.floor(tw / MH), j1: Math.floor(bw / MH),
+          };
+        }
+
         function drawRoads() {
-          // casings first (thicker, gray), then white fill
-          function line(a, b, wgt, color) {
-            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-            ctx.lineWidth = wgt; ctx.strokeStyle = color; ctx.lineCap = "butt"; ctx.stroke();
-          }
-          var top = s2w(0, 0), bot = s2w(W, H);
+          var tr = tileRange();
           for (var pass = 0; pass < 2; pass++) {
             var color = pass === 0 ? "#d4d8de" : "#ffffff";
-            for (var i = 0; i < roadsV.length; i++) {
-              var rv = roadsV[i];
-              if (rv.p < top.x - 50 || rv.p > bot.x + 50) continue;
-              var wgt = (rv.major ? 26 : 13) * cam.z + (pass === 0 ? 4 : 0);
-              line(w2s(rv.p, top.y - 100), w2s(rv.p, bot.y + 100), wgt, color);
+            // vertical roads — tiled across x, drawn full screen height
+            for (var i = tr.i0; i <= tr.i1; i++) {
+              for (var v = 0; v < roadsV.length; v++) {
+                var rv = roadsV[v];
+                var sx = (rv.p + i * MW - cam.x) * cam.z + W / 2;
+                if (sx < -40 || sx > W + 40) continue;
+                ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H);
+                ctx.lineWidth = (rv.major ? 26 : 13) * cam.z + (pass === 0 ? 4 : 0);
+                ctx.strokeStyle = color; ctx.stroke();
+              }
             }
-            for (var j = 0; j < roadsH.length; j++) {
-              var rh = roadsH[j];
-              if (rh.p < top.y - 50 || rh.p > bot.y + 50) continue;
-              var wgt2 = (rh.major ? 26 : 13) * cam.z + (pass === 0 ? 4 : 0);
-              line(w2s(top.x - 100, rh.p), w2s(bot.x + 100, rh.p), wgt2, color);
+            // horizontal roads — tiled across y, drawn full screen width
+            for (var j = tr.j0; j <= tr.j1; j++) {
+              for (var h = 0; h < roadsH.length; h++) {
+                var rh = roadsH[h];
+                var sy = (rh.p + j * MH - cam.y) * cam.z + H / 2;
+                if (sy < -40 || sy > H + 40) continue;
+                ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy);
+                ctx.lineWidth = (rh.major ? 26 : 13) * cam.z + (pass === 0 ? 4 : 0);
+                ctx.strokeStyle = color; ctx.stroke();
+              }
             }
-            // diagonal avenues
-            var dwgt = 22 * cam.z + (pass === 0 ? 4 : 0);
-            for (var d = 0; d < roadsDiag.length; d++) {
-              line(w2s(roadsDiag[d].a.x, roadsDiag[d].a.y), w2s(roadsDiag[d].b.x, roadsDiag[d].b.y), dwgt, color);
-            }
-            // roundabout ring roads
-            var cwgt = 13 * cam.z + (pass === 0 ? 4 : 0);
-            for (var c = 0; c < circles.length; c++) {
-              var cs = w2s(circles[c].x, circles[c].y);
-              ctx.beginPath();
-              ctx.arc(cs.x, cs.y, circles[c].r * cam.z, 0, Math.PI * 2);
-              ctx.lineWidth = cwgt; ctx.strokeStyle = color; ctx.stroke();
+            // diagonals + roundabout rings — tiled in both axes
+            for (var ti = tr.i0; ti <= tr.i1; ti++) {
+              for (var tj = tr.j0; tj <= tr.j1; tj++) {
+                var oxx = ti * MW, oyy = tj * MH;
+                var dwgt = 22 * cam.z + (pass === 0 ? 4 : 0);
+                for (var d = 0; d < roadsDiag.length; d++) {
+                  var a = w2s(roadsDiag[d].a.x + oxx, roadsDiag[d].a.y + oyy);
+                  var b = w2s(roadsDiag[d].b.x + oxx, roadsDiag[d].b.y + oyy);
+                  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+                  ctx.lineWidth = dwgt; ctx.strokeStyle = color; ctx.stroke();
+                }
+                var cwgt = 13 * cam.z + (pass === 0 ? 4 : 0);
+                for (var c = 0; c < circles.length; c++) {
+                  var cs = w2s(circles[c].x + oxx, circles[c].y + oyy);
+                  ctx.beginPath(); ctx.arc(cs.x, cs.y, circles[c].r * cam.z, 0, Math.PI * 2);
+                  ctx.lineWidth = cwgt; ctx.strokeStyle = color; ctx.stroke();
+                }
+              }
             }
           }
         }
 
-        function drawRect(x, y, w, h, color) {
-          var s = w2s(x, y);
+        function drawRect(x, y, w, h, color, ox, oy) {
+          var s = w2s(x + (ox || 0), y + (oy || 0));
           var sw = w * cam.z, sh = h * cam.z;
           if (s.x > W || s.y > H || s.x + sw < 0 || s.y + sh < 0) return;
           ctx.fillStyle = color;
@@ -449,8 +561,8 @@ window.NomuApps.werRU = {
           ctx.closePath();
         }
 
-        function drawBuilding(b) {
-          var s = w2s(b.cx, b.cy);
+        function drawBuilding(b, ox, oy) {
+          var s = w2s(b.cx + (ox || 0), b.cy + (oy || 0));
           var maxd = Math.max(b.w, b.h) * cam.z;
           if (s.x + maxd < 0 || s.x - maxd > W || s.y + maxd < 0 || s.y - maxd > H) return;
           var w = b.w * cam.z, h = b.h * cam.z;
@@ -482,11 +594,11 @@ window.NomuApps.werRU = {
           ctx.restore();
         }
 
-        function drawRiver() {
+        function drawRiver(ox, oy) {
           if (river.length < 2) return;
           ctx.beginPath();
           for (var i = 0; i < river.length; i++) {
-            var s = w2s(river[i].x, river[i].y);
+            var s = w2s(river[i].x + (ox || 0), river[i].y + (oy || 0));
             if (i === 0) ctx.moveTo(s.x, s.y); else ctx.lineTo(s.x, s.y);
           }
           ctx.strokeStyle = "#a9d6f5";
@@ -497,16 +609,19 @@ window.NomuApps.werRU = {
 
         function drawLabels() {
           if (cam.z < 0.5) return;
+          var tr = tileRange();
           ctx.fillStyle = "#9aa0a6";
           ctx.font = Math.round(11 * Math.min(2, cam.z)) + "px 'Segoe UI',sans-serif";
           ctx.textAlign = "center";
-          for (var i = 0; i < roadsV.length; i++) {
-            if (!roadsV[i].major) continue;
-            var s = w2s(roadsV[i].p, cam.y);
-            if (s.x < 0 || s.x > W) continue;
-            ctx.save(); ctx.translate(s.x, H / 2); ctx.rotate(-Math.PI / 2);
-            ctx.fillText(streetNames[i % streetNames.length], 0, -4);
-            ctx.restore();
+          for (var ti = tr.i0; ti <= tr.i1; ti++) {
+            for (var i = 0; i < roadsV.length; i++) {
+              if (!roadsV[i].major) continue;
+              var sx = (roadsV[i].p + ti * MW - cam.x) * cam.z + W / 2;
+              if (sx < 0 || sx > W) continue;
+              ctx.save(); ctx.translate(sx, H / 2); ctx.rotate(-Math.PI / 2);
+              ctx.fillText(streetNames[i % streetNames.length], 0, -4);
+              ctx.restore();
+            }
           }
           ctx.textAlign = "left";
         }
@@ -548,17 +663,27 @@ window.NomuApps.werRU = {
           }
           ctx.clearRect(0, 0, W, H);
           ctx.fillStyle = "#eaeee8"; ctx.fillRect(0, 0, W, H);  // land
-          drawRiver();
-          parks.forEach(function (p) { drawRect(p.x, p.y, p.w, p.h, "#cdeab0"); });
-          buildings.forEach(drawBuilding);
+          var tr = tileRange();
+          for (var ti = tr.i0; ti <= tr.i1; ti++) {
+            for (var tj = tr.j0; tj <= tr.j1; tj++) {
+              var ox = ti * MW, oy = tj * MH;
+              drawRiver(ox, oy);
+              for (var p = 0; p < parks.length; p++) drawRect(parks[p].x, parks[p].y, parks[p].w, parks[p].h, "#cdeab0", ox, oy);
+              for (var bi = 0; bi < buildings.length; bi++) drawBuilding(buildings[bi], ox, oy);
+            }
+          }
           drawRoads();
-          // roundabout islands (green centers)
-          circles.forEach(function (c) {
-            var s = w2s(c.x, c.y);
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, Math.max(1, (c.r - 9) * cam.z), 0, Math.PI * 2);
-            ctx.fillStyle = "#cdeab0"; ctx.fill();
-          });
+          // roundabout islands (green centers), tiled
+          for (var ti2 = tr.i0; ti2 <= tr.i1; ti2++) {
+            for (var tj2 = tr.j0; tj2 <= tr.j1; tj2++) {
+              for (var c = 0; c < circles.length; c++) {
+                var s = w2s(circles[c].x + ti2 * MW, circles[c].y + tj2 * MH);
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, Math.max(1, (circles[c].r - 9) * cam.z), 0, Math.PI * 2);
+                ctx.fillStyle = "#cdeab0"; ctx.fill();
+              }
+            }
+          }
           drawLabels();
           drawPin();
         }
