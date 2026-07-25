@@ -198,6 +198,87 @@ window.NomuApps.spillTheTea = {
         gusts.frustumCulled = false;
         scene.add(gusts);
 
+        /* ---------- wind-blown tea leaves (ambient interaction) ---------- */
+        var clockT = 0;
+        var leaves = [];
+        var LEAF_N = 9;
+        var leafColors = [0x6f9a3f, 0x8ab24e, 0xb9822f, 0x9c6b2a, 0xc24e2a];
+
+        // A proper leaf silhouette (pointed at both ends) from bezier curves.
+        var leafShape = new THREE.Shape();
+        leafShape.moveTo(0, -0.16);
+        leafShape.quadraticCurveTo(0.14, 0.0, 0, 0.18);
+        leafShape.quadraticCurveTo(-0.14, 0.0, 0, -0.16);
+        var leafGeo = new THREE.ShapeGeometry(leafShape);
+        leafGeo.center();
+
+        for (var li = 0; li < LEAF_N; li++) {
+          var lm = new THREE.Mesh(
+            leafGeo,
+            new THREE.MeshStandardMaterial({ color: leafColors[li % leafColors.length], roughness: 0.85, side: THREE.DoubleSide })
+          );
+          var sc = rand(0.7, 1.15);
+          lm.scale.set(sc, sc, sc);
+          scene.add(lm);
+          leaves.push({
+            mesh: lm,
+            x: rand(-9, 9), y: rand(1, 8), z: rand(-4, 2.5),
+            vx: rand(-0.15, 0.15),
+            fall: rand(-0.85, -0.5),                 // gentle sink rate
+            swayF: rand(1.1, 2.3), swayP: rand(0, 6.28),
+            spinX: rand(-0.05, 0.05), spinZ: rand(-0.06, 0.06),
+            rx: rand(0, 6.28), rz: rand(0, 6.28),
+          });
+        }
+        function updateLeaves(dt) {
+          for (var i = 0; i < leaves.length; i++) {
+            var l = leaves[i];
+            var sway = Math.sin(clockT * l.swayF + l.swayP);
+            // horizontal: wind drift + gentle side-to-side sway (like a real falling leaf)
+            l.vx += wind * dt * 0.9;
+            l.vx *= 0.97;
+            l.x += (l.vx + sway * 0.6) * dt * 3;
+            l.y += (l.fall + Math.abs(sway) * 0.15) * dt * 3;   // sinks, hesitates on each sway
+            l.z += Math.cos(clockT * l.swayF * 0.7 + l.swayP) * 0.4 * dt * 3;
+            if (l.x > 10) l.x = -10; else if (l.x < -10) l.x = 10;
+            if (l.y < 0.35) { l.y = rand(6, 9.5); l.x = rand(-10, 10); l.z = rand(-4, 2.5); }
+            l.mesh.position.set(l.x, l.y, l.z);
+            // tumble on two axes + sway the yaw so it flutters instead of spinning flatly
+            l.rx += l.spinX; l.rz += l.spinZ;
+            l.mesh.rotation.set(l.rx, sway * 1.3, l.rz);
+          }
+        }
+
+        /* ---------- spill stains on the table ---------- */
+        var splats = [];
+        var SPLAT_N = 90, splatIdx = 0;
+        var splatGeo = new THREE.CircleGeometry(1, 14);
+        for (var si = 0; si < SPLAT_N; si++) {
+          var sm = new THREE.Mesh(splatGeo, new THREE.MeshBasicMaterial({
+            color: 0x6e3f12, transparent: true, opacity: 0, depthWrite: false,
+          }));
+          sm.rotation.x = -Math.PI / 2;
+          sm.position.y = 0.022;
+          sm.scale.setScalar(0.0001);
+          scene.add(sm);
+          splats.push(sm);
+        }
+        function addSplat(x, z) {
+          var sm = splats[splatIdx];
+          splatIdx = (splatIdx + 1) % SPLAT_N;
+          sm.position.set(x, 0.022, z);
+          var r = rand(0.09, 0.22);
+          sm.scale.set(r, r, r);
+          sm.material.opacity = rand(0.35, 0.6);
+        }
+        function clearSplats() {
+          for (var i = 0; i < splats.length; i++) {
+            splats[i].material.opacity = 0;
+            splats[i].scale.setScalar(0.0001);
+          }
+          splatIdx = 0;
+        }
+
         /* ---------- HUD overlay ---------- */
         var hud = document.createElement("div");
         hud.style.cssText =
@@ -268,6 +349,7 @@ window.NomuApps.spillTheTea = {
           aimX = 0;
           camera.position.set(0, cfg.camY, cfg.camZ);
           camera.lookAt(0, cfg.lookY, 0);
+          clearSplats();
           elBanner.style.display = "none";
         }
         function fullReset() { total = 0; startLevel(1); }
@@ -381,6 +463,7 @@ window.NomuApps.spillTheTea = {
         var GRAV = 6.2;
         function step(dt) {
           var cfg = LEVELS[level - 1];
+          clockT += dt;
           // wind wanders toward a new target often, so the stream keeps getting
           // shoved around while you pour (stronger on higher levels).
           windTimer -= dt;
@@ -424,7 +507,7 @@ window.NomuApps.spillTheTea = {
             // hit the table (missed the glass) -> spill
             if (p.y <= 0.08) {
               if (horiz < GLASS_INNER) { inGlass += 1; fillLevel = clamp(fillLevel + 0.0016, 0, 1); }
-              else spilled += 1;
+              else { spilled += 1; if (Math.random() < 0.5) addSplat(p.x, p.z); }
               parts.splice(i, 1);
               continue;
             }
@@ -446,6 +529,8 @@ window.NomuApps.spillTheTea = {
               phase = "failed";     // ran dry before hitting the target
             }
           }
+
+          updateLeaves(dt);
         }
 
         function syncPoints() {
