@@ -278,6 +278,7 @@ window.NomuApps.werRU = {
         var cam = { x: MW / 2, y: MH / 2, z: 0.26 };
         var flyTarget = null;      // {x,y,z} when flying to a pin
         var pin = null;            // {x,y,t0,place,name}
+        var route = null;          // { from, to, pts, t0, fromLabel } directions overlay
 
         /* ---------- DOM: canvas + overlays ---------- */
         var canvas = document.createElement("canvas");
@@ -337,6 +338,20 @@ window.NomuApps.werRU = {
         function etaFor(name, label) {
           return ETAS[Math.floor(Math.random() * ETAS.length)];
         }
+        // build a street-like route (right-angle dog-legs, a little jitter)
+        function makeRoutePath(from, to) {
+          var midX = from.x + (to.x - from.x) * (0.35 + Math.random() * 0.3);
+          var midY = from.y + (to.y - from.y) * (0.45 + Math.random() * 0.25);
+          var midX2 = midX + (to.x - midX) * (0.4 + Math.random() * 0.4);
+          return [
+            { x: from.x, y: from.y },
+            { x: midX, y: from.y },
+            { x: midX, y: midY },
+            { x: midX2, y: midY },
+            { x: midX2, y: to.y },
+            { x: to.x, y: to.y },
+          ];
+        }
 
         function renderSuggestions() {
           var q = input.value.trim();
@@ -368,6 +383,7 @@ window.NomuApps.werRU = {
         function selectPlace(name, pl) {
           var pos = placePos(name, pl.t);
           pin = { x: pos.x, y: pos.y, t0: performance.now(), place: pl, name: name };
+          route = null;
           flyTarget = { x: pos.x, y: pos.y, z: 1.15 };
           suggest.style.display = "none";
           input.value = name;
@@ -388,11 +404,21 @@ window.NomuApps.werRU = {
               '<button class="wr-share" style="border:0;border-radius:8px;background:#f1f3f4;color:#3c4043;padding:9px 12px;cursor:pointer;">🔗 Share</button>' +
             "</div>" +
             '<div class="wr-toast" style="margin-top:10px;color:#5f6368;font-size:12px;display:none;"></div>';
-          card.querySelector(".wr-cardx").addEventListener("click", function () { card.style.display = "none"; pin = null; });
+          card.querySelector(".wr-cardx").addEventListener("click", function () { card.style.display = "none"; pin = null; route = null; });
           card.querySelector(".wr-dir").addEventListener("click", function () {
+            // spawn a random start point and draw a route to the searched pin
+            var to = { x: pin.x, y: pin.y };
+            var ang = Math.random() * Math.PI * 2, dist = 700 + Math.random() * 1500;
+            var from = { x: to.x + Math.cos(ang) * dist, y: to.y + Math.sin(ang) * dist };
+            var fromPlace = POOL[Math.floor(Math.random() * POOL.length)];
+            route = { from: from, to: to, pts: makeRoutePath(from, to), t0: performance.now(), fromLabel: fromPlace.e + " " + fromPlace.t };
+            // fit both points in view
+            var midx = (from.x + to.x) / 2, midy = (from.y + to.y) / 2;
+            var z = clamp(Math.min(W / (Math.abs(from.x - to.x) + 600), H / (Math.abs(from.y - to.y) + 600)), 0.12, 1.3);
+            flyTarget = { x: midx, y: midy, z: z };
             var t = card.querySelector(".wr-toast");
             t.style.display = "block";
-            t.textContent = "🧭 Kinakalkula ang ruta… ay wala pala. " + etaFor(name, pl.t);
+            t.innerHTML = "🧭 Ruta mula sa <b>" + esc(fromPlace.e + " " + fromPlace.t) + "</b><br>" + esc(etaFor(name, pl.t));
           });
           card.querySelector(".wr-share").addEventListener("click", function () {
             var t = card.querySelector(".wr-toast");
@@ -626,6 +652,44 @@ window.NomuApps.werRU = {
           ctx.textAlign = "left";
         }
 
+        function drawRoute() {
+          if (!route) return;
+          var pts = route.pts;
+          // segment lengths + total
+          var segs = [], total = 0, i;
+          for (i = 1; i < pts.length; i++) {
+            var L = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+            segs.push(L); total += L;
+          }
+          // animated reveal over ~0.8s
+          var reveal = total * clamp((performance.now() - route.t0) / 800, 0, 1);
+          var scr = [w2s(pts[0].x, pts[0].y)], acc = 0;
+          for (i = 1; i < pts.length; i++) {
+            if (acc + segs[i - 1] <= reveal) {
+              scr.push(w2s(pts[i].x, pts[i].y)); acc += segs[i - 1];
+            } else {
+              var t = segs[i - 1] > 0 ? (reveal - acc) / segs[i - 1] : 0;
+              scr.push(w2s(pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t,
+                           pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t));
+              break;
+            }
+          }
+          function stroke(wgt, color) {
+            ctx.beginPath();
+            for (var k = 0; k < scr.length; k++) {
+              if (k === 0) ctx.moveTo(scr[k].x, scr[k].y); else ctx.lineTo(scr[k].x, scr[k].y);
+            }
+            ctx.lineWidth = wgt; ctx.strokeStyle = color;
+            ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.stroke();
+          }
+          stroke(Math.max(7, 10 * cam.z), "#ffffff");   // casing
+          stroke(Math.max(4, 6 * cam.z), "#1a73e8");    // route
+          // origin (start) marker — fixed pixel size
+          var s = w2s(route.from.x, route.from.y);
+          ctx.beginPath(); ctx.arc(s.x, s.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+          ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI * 2); ctx.fillStyle = "#1a73e8"; ctx.fill();
+        }
+
         function drawPin() {
           if (!pin) return;
           var s = w2s(pin.x, pin.y);
@@ -685,6 +749,7 @@ window.NomuApps.werRU = {
             }
           }
           drawLabels();
+          drawRoute();
           drawPin();
         }
 
