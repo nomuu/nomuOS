@@ -64,117 +64,256 @@ window.NomuApps.spillTheTea = {
         renderer.domElement.style.outline = "none";
         renderer.domElement.style.touchAction = "none";   // let us own touch drags (no page scroll / shell swipes)
         renderer.domElement.tabIndex = 0;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         body.appendChild(renderer.domElement);
 
         var scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0b0e1a);
-        scene.fog = new THREE.Fog(0x0b0e1a, 12, 26);
+        // cozy tea-shop backdrop — warm gradient, a hanging-light glow, soft bokeh
+        var bgCanvas = document.createElement("canvas");
+        bgCanvas.width = 512; bgCanvas.height = 512;
+        var bg = bgCanvas.getContext("2d");
+        var vg = bg.createLinearGradient(0, 0, 0, 512);
+        vg.addColorStop(0, "#241a12");
+        vg.addColorStop(0.5, "#3a2a1c");
+        vg.addColorStop(1, "#170f08");
+        bg.fillStyle = vg; bg.fillRect(0, 0, 512, 512);
+        var rg = bg.createRadialGradient(256, 140, 20, 256, 140, 330);
+        rg.addColorStop(0, "rgba(255,196,120,0.55)");
+        rg.addColorStop(0.4, "rgba(210,140,70,0.20)");
+        rg.addColorStop(1, "rgba(210,140,70,0)");
+        bg.fillStyle = rg; bg.fillRect(0, 0, 512, 512);
+        for (var bki = 0; bki < 24; bki++) {
+          var bx = Math.random() * 512, by = Math.random() * 320, br = 6 + Math.random() * 28;
+          var bd = bg.createRadialGradient(bx, by, 0, bx, by, br);
+          bd.addColorStop(0, "rgba(255,205,140,0.30)");
+          bd.addColorStop(1, "rgba(255,205,140,0)");
+          bg.fillStyle = bd; bg.beginPath(); bg.arc(bx, by, br, 0, Math.PI * 2); bg.fill();
+        }
+        scene.background = new THREE.CanvasTexture(bgCanvas);
+        scene.fog = new THREE.Fog(0x2a1f15, 14, 30);
 
         var camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 100);
         camera.position.set(0, 3.4, 8.4);
         camera.lookAt(0, 1.5, 0);
 
         /* ---------- lights ---------- */
-        scene.add(new THREE.HemisphereLight(0xbcd0ff, 0x20140a, 0.75));
-        var key = new THREE.DirectionalLight(0xffffff, 0.9);
-        key.position.set(4, 8, 6);
+        scene.add(new THREE.HemisphereLight(0xffe9c8, 0x2a1a10, 0.7));
+        var key = new THREE.DirectionalLight(0xfff2df, 1.0);
+        key.position.set(5, 16, 8);
+        key.castShadow = true;
+        key.shadow.mapSize.set(1024, 1024);
+        key.shadow.camera.near = 1;
+        key.shadow.camera.far = 60;
+        key.shadow.camera.left = -10; key.shadow.camera.right = 10;
+        key.shadow.camera.top = 12; key.shadow.camera.bottom = -4;
+        key.shadow.bias = -0.0006;
         scene.add(key);
-        var rim = new THREE.DirectionalLight(0x7c9cff, 0.5);
+        var rim = new THREE.DirectionalLight(0xe8c49a, 0.45);
         rim.position.set(-6, 4, -4);
         scene.add(rim);
+        // cozy warm glow above the cup
+        var warm = new THREE.PointLight(0xffc27a, 0.55, 40);
+        warm.position.set(0, 7, 3);
+        scene.add(warm);
 
-        /* ---------- table ---------- */
+        /* ---------- table (wood) ---------- */
+        var woodCanvas = document.createElement("canvas");
+        woodCanvas.width = woodCanvas.height = 256;
+        var wctx = woodCanvas.getContext("2d");
+        wctx.fillStyle = "#7a5535"; wctx.fillRect(0, 0, 256, 256);
+        for (var wy = 0; wy < 256; wy++) {
+          var s = Math.sin(wy * 0.11) * 12 + (Math.random() * 10 - 5);
+          wctx.fillStyle = "rgba(" + Math.floor(120 + s) + "," + Math.floor(84 + s * 0.7) + "," + Math.floor(50 + s * 0.4) + ",0.45)";
+          wctx.fillRect(0, wy, 256, 1);
+        }
+        for (var g = 0; g < 16; g++) {
+          wctx.strokeStyle = "rgba(60,38,20,0.22)"; wctx.lineWidth = 1 + Math.random() * 1.6;
+          var gy = Math.random() * 256;
+          wctx.beginPath(); wctx.moveTo(0, gy);
+          wctx.bezierCurveTo(85, gy + (Math.random() * 22 - 11), 170, gy + (Math.random() * 22 - 11), 256, gy + (Math.random() * 16 - 8));
+          wctx.stroke();
+        }
+        var woodTex = new THREE.CanvasTexture(woodCanvas);
+        woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+        woodTex.repeat.set(3, 3);
+
         var table = new THREE.Mesh(
-          new THREE.CylinderGeometry(7, 7, 0.4, 48),
-          new THREE.MeshStandardMaterial({ color: 0x3a2a20, roughness: 0.9, metalness: 0.05 })
+          new THREE.CylinderGeometry(7, 7, 0.4, 64),
+          new THREE.MeshStandardMaterial({ map: woodTex, color: 0x9a6b43, roughness: 0.75, metalness: 0.04 })
         );
         table.position.y = -0.2;
+        table.receiveShadow = true;
         scene.add(table);
 
-        // a soft ring to mark where the glass sits
-        var mat = new THREE.MeshStandardMaterial({ color: 0x5a4030, roughness: 1 });
-        var coaster = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.06, 40), mat);
-        coaster.position.y = 0.03;
-        scene.add(coaster);
+        var tableRim = new THREE.Mesh(
+          new THREE.TorusGeometry(7, 0.12, 12, 64),
+          new THREE.MeshStandardMaterial({ color: 0x5b3d26, roughness: 0.6 })
+        );
+        tableRim.rotation.x = Math.PI / 2;
+        scene.add(tableRim);
 
-        /* ---------- glass ---------- */
-        var GLASS_BASE_Y = 0.06;     // inner floor of the glass
-        var GLASS_H = 2.2;           // glass height
-        var GLASS_R = 0.82;          // outer radius
-        var GLASS_INNER = 0.72;      // capture radius
+        // porcelain saucer under the cup
+        var saucer = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.55, 1.35, 0.08, 48),
+          new THREE.MeshStandardMaterial({ color: 0xf3efe6, roughness: 0.3, metalness: 0.05 })
+        );
+        saucer.position.y = 0.05;
+        saucer.receiveShadow = true;
+        saucer.castShadow = true;
+        scene.add(saucer);
+
+        /* ---------- tea cup ---------- */
+        var GLASS_BASE_Y = 0.10;     // inner floor of the cup
+        var GLASS_H = 1.7;           // cup height (shorter than a water glass)
+        var GLASS_R = 0.9;           // outer radius
+        var GLASS_INNER = 0.8;       // capture radius
         var RIM_Y = GLASS_BASE_Y + GLASS_H;
 
         var glassGroup = new THREE.Group();
         scene.add(glassGroup);
 
+        var glassMat = new THREE.MeshStandardMaterial({
+          color: 0xbfe0ff, transparent: true, opacity: 0.24,
+          roughness: 0.04, metalness: 0.0, side: THREE.DoubleSide,
+        });
+
         var glassWall = new THREE.Mesh(
-          new THREE.CylinderGeometry(GLASS_R, GLASS_R * 0.9, GLASS_H, 40, 1, true),
-          new THREE.MeshStandardMaterial({
-            color: 0xaad4ff, transparent: true, opacity: 0.22,
-            roughness: 0.05, metalness: 0, side: THREE.DoubleSide,
-          })
+          new THREE.CylinderGeometry(GLASS_R, GLASS_R * 0.9, GLASS_H, 44, 1, true), glassMat
         );
         glassWall.position.y = GLASS_BASE_Y + GLASS_H / 2;
         glassGroup.add(glassWall);
 
         var glassBottom = new THREE.Mesh(
-          new THREE.CylinderGeometry(GLASS_R * 0.9, GLASS_R * 0.9, 0.12, 40),
-          new THREE.MeshStandardMaterial({ color: 0xaad4ff, transparent: true, opacity: 0.35, roughness: 0.05 })
+          new THREE.CylinderGeometry(GLASS_R * 0.9, GLASS_R * 0.86, 0.12, 44),
+          new THREE.MeshStandardMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0.4, roughness: 0.05 })
         );
         glassBottom.position.y = GLASS_BASE_Y;
         glassGroup.add(glassBottom);
 
+        // rim ring at the top of the cup
+        var cupRim = new THREE.Mesh(new THREE.TorusGeometry(GLASS_R, 0.025, 10, 48), glassMat);
+        cupRim.rotation.x = Math.PI / 2;
+        cupRim.position.y = RIM_Y;
+        glassGroup.add(cupRim);
+
+        // cup handle on the -X side (away from the pour)
+        var cupHandle = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.06, 12, 32), glassMat);
+        cupHandle.position.set(-(GLASS_R + 0.05), GLASS_BASE_Y + GLASS_H * 0.45, 0);
+        cupHandle.rotation.y = Math.PI / 2;
+        glassGroup.add(cupHandle);
+
         // the tea inside the glass — a cylinder we scale in Y as it fills
         var teaColor = 0xd98a2b;
         var tea = new THREE.Mesh(
-          new THREE.CylinderGeometry(GLASS_INNER, GLASS_INNER * 0.9, 1, 36),
-          new THREE.MeshStandardMaterial({ color: teaColor, roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.92 })
+          new THREE.CylinderGeometry(GLASS_INNER, GLASS_INNER * 0.9, 1, 40),
+          new THREE.MeshStandardMaterial({ color: teaColor, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.9 })
         );
         tea.scale.y = 0.0001;
         tea.position.y = GLASS_BASE_Y;
+        tea.receiveShadow = true;
         glassGroup.add(tea);
+
+        // glossy liquid top surface + a subtle meniscus ring (repositioned each frame)
+        var teaSurface = new THREE.Mesh(
+          new THREE.CircleGeometry(GLASS_INNER, 40),
+          new THREE.MeshStandardMaterial({ color: 0xe89b3a, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.96 })
+        );
+        teaSurface.rotation.x = -Math.PI / 2;
+        teaSurface.visible = false;
+        glassGroup.add(teaSurface);
+
+        var meniscus = new THREE.Mesh(
+          new THREE.TorusGeometry(GLASS_INNER * 0.98, 0.022, 8, 44),
+          new THREE.MeshStandardMaterial({ color: 0xc57a1f, roughness: 0.2 })
+        );
+        meniscus.rotation.x = -Math.PI / 2;
+        meniscus.visible = false;
+        glassGroup.add(meniscus);
 
         /* ---------- teapot (built from primitives) ---------- */
         var pot = new THREE.Group();
         pot.position.set(0, 4.0, 0);
         scene.add(pot);
 
-        var potMat = new THREE.MeshStandardMaterial({ color: 0xe8e2d0, roughness: 0.4, metalness: 0.25 });
-        var potMatDark = new THREE.MeshStandardMaterial({ color: 0xc9b48f, roughness: 0.5, metalness: 0.2 });
+        var potMat = new THREE.MeshStandardMaterial({ color: 0xf3efe6, roughness: 0.28, metalness: 0.06 });   // porcelain
+        var potMatDark = new THREE.MeshStandardMaterial({ color: 0xd7cdb8, roughness: 0.4, metalness: 0.05 });
+        var potAccent = new THREE.MeshStandardMaterial({ color: 0xcf7a2a, roughness: 0.35, metalness: 0.12 }); // painted trim
 
-        var potBody = new THREE.Mesh(new THREE.SphereGeometry(0.7, 28, 20), potMat);
-        potBody.scale.y = 0.8;
+        var potBody = new THREE.Mesh(new THREE.SphereGeometry(0.7, 40, 28), potMat);
+        potBody.scale.y = 0.82;
         pot.add(potBody);
 
-        var potLid = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), potMatDark);
-        potLid.position.y = 0.52;
+        // painted band around the belly
+        var band = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.05, 12, 48), potAccent);
+        band.rotation.x = Math.PI / 2;
+        band.position.y = 0.02;
+        pot.add(band);
+
+        // foot ring at the base
+        var foot = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.05, 10, 36), potMatDark);
+        foot.rotation.x = Math.PI / 2;
+        foot.position.y = -0.5;
+        pot.add(foot);
+
+        // lid: rounded cap + rim ring + knob
+        var potLid = new THREE.Mesh(new THREE.SphereGeometry(0.33, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2), potMat);
+        potLid.position.y = 0.5;
         pot.add(potLid);
-        var knob = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), potMatDark);
-        knob.position.y = 0.62;
+        var lidRim = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 10, 32), potAccent);
+        lidRim.rotation.x = Math.PI / 2;
+        lidRim.position.y = 0.5;
+        pot.add(lidRim);
+        var knob = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), potAccent);
+        knob.position.y = 0.66;
         pot.add(knob);
 
-        // spout: a cone pointing out toward +X and slightly up
-        var spout = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 0.95, 16), potMat);
+        // spout: pointing out toward +X and slightly up
+        var spout = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.17, 0.98, 20), potMat);
         spout.position.set(0.72, 0.12, 0);
         spout.rotation.z = -Math.PI / 3.1;   // tip aims up/out
         pot.add(spout);
 
         // handle: a torus on the -X side
-        var handle = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.07, 12, 24), potMatDark);
+        var handle = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.06, 16, 32), potMat);
         handle.position.set(-0.72, 0.1, 0);
         handle.rotation.y = Math.PI / 2;
         pot.add(handle);
 
-        // Local position of the spout tip (where tea comes out).
-        var SPOUT_TIP_LOCAL = new THREE.Vector3(0.72 + 0.5, 0.12 + 0.62, 0);
+        // every part of the pot casts a shadow
+        pot.traverse(function (o) { if (o.isMesh) o.castShadow = true; });
+
+        // Local position of the spout tip (where tea comes out) — derived from
+        // the spout's own transform so the pour point matches the nozzle exactly.
+        var SPOUT_TIP_LOCAL = new THREE.Vector3(0, 0.98 / 2, 0)
+          .applyEuler(new THREE.Euler(0, 0, -Math.PI / 3.1))
+          .add(new THREE.Vector3(0.72, 0.12, 0));
+
+        // a small nozzle bead right at the tip, so the pour origin reads clearly
+        var nozzle = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 12), potAccent);
+        nozzle.position.copy(SPOUT_TIP_LOCAL);
+        nozzle.castShadow = true;
+        pot.add(nozzle);
 
         /* ---------- tea particle system (THREE.Points) ---------- */
         var MAX = 1400;
         var posArr = new Float32Array(MAX * 3);
         var pgeo = new THREE.BufferGeometry();
         pgeo.setAttribute("position", new THREE.BufferAttribute(posArr, 3));
+        // soft round droplet sprite so the stream looks like liquid, not squares
+        var dropCanvas = document.createElement("canvas");
+        dropCanvas.width = dropCanvas.height = 64;
+        var dctx = dropCanvas.getContext("2d");
+        var dgrad = dctx.createRadialGradient(30, 26, 2, 32, 32, 30);
+        dgrad.addColorStop(0, "rgba(255,255,255,1)");
+        dgrad.addColorStop(0.55, "rgba(255,255,255,0.85)");
+        dgrad.addColorStop(1, "rgba(255,255,255,0)");
+        dctx.fillStyle = dgrad;
+        dctx.beginPath(); dctx.arc(32, 32, 30, 0, Math.PI * 2); dctx.fill();
+        var dropTex = new THREE.CanvasTexture(dropCanvas);
+
         var pmat = new THREE.PointsMaterial({
-          color: teaColor, size: 0.14, sizeAttenuation: true,
+          color: teaColor, size: 0.18, sizeAttenuation: true, map: dropTex,
           transparent: true, opacity: 0.95, depthWrite: false,
         });
         var points = new THREE.Points(pgeo, pmat);
@@ -519,6 +658,12 @@ window.NomuApps.spillTheTea = {
           var targetScale = Math.max(0.0001, fillLevel * GLASS_H);
           tea.scale.y += (targetScale - tea.scale.y) * Math.min(1, dt * 8);
           tea.position.y = GLASS_BASE_Y + tea.scale.y / 2;
+
+          // keep the glossy surface + meniscus sitting on top of the liquid
+          var teaTopY = GLASS_BASE_Y + tea.scale.y;
+          teaSurface.position.y = teaTopY;
+          meniscus.position.y = teaTopY;
+          teaSurface.visible = meniscus.visible = fillLevel > 0.012;
 
           // ---- level progression ----
           if (phase === "play") {
