@@ -93,9 +93,19 @@
       </button>
       <div id="task-list" class="task-list"></div>
       <div class="tray">
-        <button id="widgets-button" class="tray-btn" title="Widgets">🧩</button>
+        <button id="widgets-button" class="tray-btn" title="Widgets &amp; running apps">▲</button>
         <span id="clock" class="clock"></span>
       </div>
+    </div>
+
+    <!-- Tray flyout: the arrow reveals these two buttons (like Windows' hidden-icons tray) -->
+    <div id="tray-flyout" class="tray-flyout hidden">
+      <button id="tray-widgets-btn" class="tf-btn" title="Widgets">
+        <span class="tf-glyph">🧩</span><span class="tf-label">Widgets</span>
+      </button>
+      <button id="tray-tasks-btn" class="tf-btn" title="Task Manager">
+        <span class="tf-glyph">📋</span><span class="tf-label">Task Manager</span>
+      </button>
     </div>
 
     <!-- Widget picker / gallery -->

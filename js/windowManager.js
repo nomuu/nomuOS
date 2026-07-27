@@ -28,6 +28,7 @@ window.NomuWM = (function () {
       if (o.taskEl) o.taskEl.classList.toggle("active", o.id === id);
     });
     syncMaxState();
+    notifyChange();
   }
 
   // Reflect on <body> whether a maximized (fullscreen) window is currently
@@ -44,6 +45,28 @@ window.NomuWM = (function () {
   function find(id) {
     for (var i = 0; i < windows.length; i++) if (windows[i].id === id) return windows[i];
     return null;
+  }
+
+  // Broadcast that the set/state of open windows changed, so the Task Manager
+  // (and anything else interested) can refresh itself.
+  function notifyChange() {
+    try { document.dispatchEvent(new CustomEvent("nomu:windows")); }
+    catch (e) { /* CustomEvent may be unavailable in very old browsers */ }
+  }
+
+  // Snapshot of currently open windows for the Task Manager.
+  function list() {
+    return windows.map(function (w) {
+      return {
+        id: w.id,
+        title: w.title,
+        icon: w.icon,
+        key: w.key,
+        minimized: w.minimized,
+        maximized: w.maximized,
+        active: w.id === activeId,
+      };
+    });
   }
 
   // Find an already-open window by its singleton key (see open()'s opts.key).
@@ -183,6 +206,7 @@ window.NomuWM = (function () {
       if (!windows[i].minimized && windows[i].id !== id) { focus(windows[i].id); break; }
     }
     syncMaxState();
+    notifyChange();
   }
 
   function restore(id) {
@@ -227,6 +251,7 @@ window.NomuWM = (function () {
       if (windows.length) focus(windows[windows.length - 1].id);
     }
     syncMaxState();
+    notifyChange();
   }
 
   function makeDraggable(w, handle) {
@@ -285,6 +310,8 @@ window.NomuWM = (function () {
     open: open,
     focus: focus,
     minimize: minimize,
+    restore: restore,
     close: close,
+    list: list,
   };
 })();

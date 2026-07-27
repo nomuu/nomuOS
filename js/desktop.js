@@ -312,7 +312,7 @@ window.NomuDesktop = (function () {
     if (widgetsBtn) {
       widgetsBtn.addEventListener("click", function (e) {
         e.stopPropagation();
-        if (window.NomuWidgets) NomuWidgets.togglePicker();
+        if (window.NomuWidgets) NomuWidgets.toggleFlyout();
       });
     }
 

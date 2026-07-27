@@ -563,8 +563,11 @@ a.wg-proj:hover { border-color: var(--accent); background: rgba(124,92,255,0.12)
   width: 34px; height: 34px; border-radius: 10px;
   border: 1px solid var(--stroke); background: rgba(255,255,255,0.05);
   font-size: 16px; display: grid; place-items: center;
+  transition: transform 0.2s ease, background 0.12s, border-color 0.12s;
 }
 .tray-btn:hover { background: rgba(124,92,255,0.20); border-color: var(--accent); }
+/* up-arrow flips to point down while its panel is open */
+.tray-btn.open { transform: rotate(180deg); background: rgba(124,92,255,0.20); border-color: var(--accent); }
 
 /* ============================================================
    Widget picker / gallery
@@ -599,6 +602,64 @@ a.wg-proj:hover { border-color: var(--accent); background: rgba(124,92,255,0.12)
 .wp-glyph { font-size: 24px; }
 .wp-name { font-weight: 600; }
 .wp-add { font-size: 10px; color: var(--accent-2); text-transform: uppercase; letter-spacing: 1px; }
+
+/* section headings inside the widgets + tasks panel */
+.wp-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-dim); margin: 14px 2px 8px;
+}
+.wp-section-title:first-of-type { margin-top: 2px; }
+
+/* task manager (running apps) list */
+.tm-wrap { padding: 12px; height: 100%; box-sizing: border-box; overflow-y: auto; }
+.tm-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.tm-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px solid var(--stroke); background: rgba(255,255,255,0.04);
+  cursor: pointer; transition: background 0.12s, border-color 0.12s;
+}
+.tm-item:hover { background: rgba(124,92,255,0.18); border-color: var(--accent); }
+.tm-item.active { border-color: var(--accent); background: rgba(124,92,255,0.16); }
+.tm-item.minimized { opacity: 0.6; }
+.tm-glyph { font-size: 16px; flex: 0 0 auto; }
+.tm-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.tm-state { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+.tm-close {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; border: none;
+  background: rgba(255,255,255,0.08); color: var(--text);
+  font-size: 15px; line-height: 1; cursor: pointer; display: grid; place-items: center;
+  transition: background 0.12s, color 0.12s;
+}
+.tm-close:hover { background: var(--accent-3); color: #fff; }
+.tm-empty { font-size: 12px; color: var(--text-dim); padding: 10px 4px; text-align: center; }
+
+/* tray flyout — the small box the arrow reveals, with two buttons */
+.tray-flyout {
+  position: absolute; right: 12px;
+  bottom: calc(var(--taskbar-h) + 18px);
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 14px; box-shadow: var(--shadow);
+  z-index: 5001;
+  animation: windowIn 0.15s ease;
+}
+.tf-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px 10px 10px; border-radius: 10px;
+  border: 1px solid var(--stroke); background: rgba(255,255,255,0.04);
+  color: var(--text); font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.tf-btn:hover { background: rgba(124,92,255,0.18); border-color: var(--accent); }
+.tf-glyph { font-size: 18px; }
 
 /* ============================================================
    Projects as desktop apps

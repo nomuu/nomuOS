@@ -7,6 +7,9 @@ window.NomuWidgets = (function () {
   "use strict";
 
   var STORAGE_KEY = "nomuos.widgets.v1";
+  var TM_KEY = "task-manager"; // single-instance key for the Task Manager window
+  var tmBody = null;           // live list container inside the Task Manager window
+  var tmSig = "";              // signature of the currently-rendered window set
   var layer = null;
   var idSeq = 0;
   var instances = []; // { id, type, x, y, el, data }
@@ -351,6 +354,72 @@ window.NomuWidgets = (function () {
     layer.querySelectorAll(".wg-date").forEach(function (el) { el.textContent = date; });
   }
 
+  /* ---------------- Task manager (running apps) ----------------
+     Lists the windows currently open in the window manager (the same
+     apps/projects shown as taskbar tabs). Click a row to focus/restore
+     it, or hit × to close it. */
+  function renderTaskList(host) {
+    if (!host) return;
+
+    var all = (window.NomuWM && typeof NomuWM.list === "function") ? NomuWM.list() : [];
+    // Don't list the Task Manager window itself.
+    var running = all.filter(function (w) { return w.key !== TM_KEY; });
+    var sig = running.map(function (w) { return w.id; }).join(",");
+
+    // If the same set of windows is open, just refresh their states in place.
+    // A full rebuild here would destroy the row/button the user is mid-click on
+    // (window focus fires on mousedown, before the click completes), which is
+    // why the close button appeared to do nothing.
+    if (sig === tmSig && host.children.length && !host.querySelector(".tm-empty")) {
+      running.forEach(function (win) {
+        var row = host.querySelector('.tm-item[data-id="' + win.id + '"]');
+        if (!row) return;
+        row.classList.toggle("active", !!win.active && !win.minimized);
+        row.classList.toggle("minimized", !!win.minimized);
+        var st = row.querySelector(".tm-state");
+        if (st) st.textContent = win.minimized ? "hidden" : "";
+      });
+      return;
+    }
+
+    tmSig = sig;
+    host.innerHTML = "";
+    if (!running.length) {
+      host.innerHTML = '<div class="tm-empty">No apps running</div>';
+      return;
+    }
+
+    running.forEach(function (win) {
+      var row = document.createElement("div");
+      row.className = "tm-item" +
+        (win.active && !win.minimized ? " active" : "") +
+        (win.minimized ? " minimized" : "");
+      row.setAttribute("data-id", win.id);
+      row.innerHTML =
+        '<span class="tm-glyph">' + win.icon + "</span>" +
+        '<span class="tm-label"></span>' +
+        '<span class="tm-state"></span>' +
+        '<button class="tm-close" title="Close">×</button>';
+      row.querySelector(".tm-label").textContent = win.title;
+      row.querySelector(".tm-state").textContent = win.minimized ? "hidden" : "";
+
+      // Clicking the row (but not the close button) focuses/restores the window.
+      row.addEventListener("click", function (e) {
+        if (e.target.classList.contains("tm-close")) return;
+        if (typeof NomuWM.restore === "function") NomuWM.restore(win.id);
+        else if (typeof NomuWM.focus === "function") NomuWM.focus(win.id);
+      });
+
+      row.querySelector(".tm-close").addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (typeof NomuWM.close === "function") NomuWM.close(win.id);
+        // NomuWM.close() fires "nomu:windows"; the listener rebuilds the list.
+      });
+
+      host.appendChild(row);
+    });
+  }
+
   /* ---------------- Widget picker (gallery) ---------------- */
   function buildPicker() {
     var host = document.getElementById("widget-picker-list");
@@ -375,7 +444,43 @@ window.NomuWidgets = (function () {
     });
   }
 
-  var pickerOpen = false;
+  var flyoutOpen = false, pickerOpen = false;
+
+  function setArrow(open) {
+    var btn = document.getElementById("widgets-button");
+    if (btn) btn.classList.toggle("open", !!open);
+  }
+
+  // Align a panel horizontally centered above the arrow button.
+  function positionAboveArrow(el) {
+    var btn = document.getElementById("widgets-button");
+    if (!btn || !el) return;
+    var rect = btn.getBoundingClientRect();
+    var w = el.offsetWidth;
+    var left = rect.left + rect.width / 2 - w / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    el.style.left = left + "px";
+    el.style.right = "auto";
+  }
+
+  // --- flyout: the small tray with the Widgets + Task Manager buttons ---
+  function openFlyout() {
+    var el = document.getElementById("tray-flyout");
+    if (!el) return;
+    el.classList.remove("hidden");
+    positionAboveArrow(el);
+    flyoutOpen = true;
+    setArrow(true);
+  }
+  function closeFlyout() {
+    var el = document.getElementById("tray-flyout");
+    if (el) el.classList.add("hidden");
+    flyoutOpen = false;
+    setArrow(false);
+  }
+  function toggleFlyout() { flyoutOpen ? closeFlyout() : openFlyout(); }
+
+  // --- widget list box (anchored to the side, per CSS — not moved) ---
   function openPicker() {
     var el = document.getElementById("widget-picker");
     if (!el) return;
@@ -385,11 +490,29 @@ window.NomuWidgets = (function () {
   }
   function closePicker() {
     var el = document.getElementById("widget-picker");
-    if (!el) return;
-    el.classList.add("hidden");
+    if (el) el.classList.add("hidden");
     pickerOpen = false;
   }
   function togglePicker() { pickerOpen ? closePicker() : openPicker(); }
+
+  // --- task manager: a real app window (min / max / close, centered) ---
+  function openTasks() {
+    if (!window.NomuWM || typeof NomuWM.open !== "function") return;
+    NomuWM.open({
+      title: "Task Manager",
+      icon: "📋",
+      key: TM_KEY,            // single instance: re-opening just focuses it
+      width: 340, height: 400,
+      render: function (body) {
+        body.innerHTML = '<div class="tm-wrap"><div class="tm-list"></div></div>';
+        tmBody = body.querySelector(".tm-list");
+        renderTaskList(tmBody);
+      },
+    });
+  }
+
+  // Close the flyout and the widget picker (outside-click).
+  function closeAll() { closeFlyout(); closePicker(); }
 
   /* ---------------- Init ---------------- */
   function init() {
@@ -420,12 +543,34 @@ window.NomuWidgets = (function () {
       instances.forEach(clamp);
     });
 
-    // click outside closes the picker
+    // wire the flyout's two buttons
+    var wBtn = document.getElementById("tray-widgets-btn");
+    if (wBtn) wBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      closeFlyout();
+      togglePicker();
+    });
+    var tBtn = document.getElementById("tray-tasks-btn");
+    if (tBtn) tBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      closeFlyout();
+      openTasks();
+    });
+
+    // click outside closes the flyout and the widget picker
     document.addEventListener("click", function (e) {
-      if (!pickerOpen) return;
-      var panel = document.getElementById("widget-picker");
-      var btn = document.getElementById("widgets-button");
-      if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) closePicker();
+      if (!flyoutOpen && !pickerOpen) return;
+      var ids = ["widgets-button", "tray-flyout", "widget-picker"];
+      for (var i = 0; i < ids.length; i++) {
+        var node = document.getElementById(ids[i]);
+        if (node && node.contains(e.target)) return;
+      }
+      closeAll();
+    });
+
+    // keep the Task Manager list in sync while its window is open
+    document.addEventListener("nomu:windows", function () {
+      if (tmBody && document.contains(tmBody)) renderTaskList(tmBody);
     });
   }
 
@@ -436,8 +581,12 @@ window.NomuWidgets = (function () {
     removeByType: removeByType,
     hasType: hasType,
     clearAll: clearAll,
+    openFlyout: openFlyout,
+    closeFlyout: closeFlyout,
+    toggleFlyout: toggleFlyout,
     openPicker: openPicker,
     closePicker: closePicker,
     togglePicker: togglePicker,
+    openTasks: openTasks,
   };
 })();
