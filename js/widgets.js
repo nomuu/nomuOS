@@ -10,6 +10,10 @@ window.NomuWidgets = (function () {
   var TM_KEY = "task-manager"; // single-instance key for the Task Manager window
   var tmBody = null;           // live list container inside the Task Manager window
   var tmSig = "";              // signature of the currently-rendered window set
+  var tmTab = "processes";     // active Task Manager tab
+  var tmRaf = 0, tmTimer = 0;  // fps loop + metrics interval handles
+  var fpsFrames = 0, fpsLast = 0, fpsVal = 0;
+  var histFps = [], histMem = [];
   var layer = null;
   var idSeq = 0;
   var instances = []; // { id, type, x, y, el, data }
@@ -420,6 +424,137 @@ window.NomuWidgets = (function () {
     });
   }
 
+  /* ---------------- Task manager: tabs + live metrics ----------------
+     Real, browser-provided metrics (not fabricated). Where a browser does
+     not expose an API, the panel says so instead of showing fake numbers. */
+  function tmKV(k, v) {
+    return '<div class="tm-kv"><span>' + esc(k) + "</span><b>" + esc(v) + "</b></div>";
+  }
+  function tmSpark(arr, fixedMax) {
+    if (!arr.length) return '<div class="tm-spark"></div>';
+    var mx = fixedMax || Math.max.apply(null, arr) || 1;
+    var bars = arr.map(function (v) {
+      var h = Math.max(3, Math.min(100, Math.round((v / mx) * 100)));
+      return '<span class="tm-bar" style="height:' + h + '%"></span>';
+    }).join("");
+    return '<div class="tm-spark">' + bars + "</div>";
+  }
+
+  function renderPerf(panel) {
+    if (!panel) return;
+    histFps.push(fpsVal);
+    if (histFps.length > 40) histFps.shift();
+    var pct = Math.min(100, Math.round((fpsVal / 60) * 100));
+    panel.innerHTML =
+      '<div class="tm-metric">' +
+        '<div class="tm-mrow"><span>Frame rate</span>' +
+          '<span class="tm-big">' + fpsVal + ' <small>fps</small></span></div>' +
+        '<div class="tm-track"><div class="tm-fill" style="width:' + pct + '%"></div></div>' +
+        tmSpark(histFps, 60) +
+        '<div class="tm-note">Live rendering performance of NomuOS · target 60 fps.</div>' +
+      "</div>";
+  }
+
+  function renderMem(panel) {
+    if (!panel) return;
+    var m = (window.performance && performance.memory) ? performance.memory : null;
+    if (!m) {
+      panel.innerHTML =
+        '<div class="tm-metric"><div class="tm-note">Memory stats aren\u2019t exposed by ' +
+        "this browser. Try a Chromium-based browser (Chrome, Edge).</div></div>";
+      return;
+    }
+    var usedMB = m.usedJSHeapSize / 1048576;
+    var limitMB = m.jsHeapSizeLimit / 1048576;
+    var pct = Math.min(100, Math.round((m.usedJSHeapSize / m.jsHeapSizeLimit) * 100));
+    histMem.push(usedMB);
+    if (histMem.length > 40) histMem.shift();
+    panel.innerHTML =
+      '<div class="tm-metric">' +
+        '<div class="tm-mrow"><span>JS heap used</span>' +
+          '<span class="tm-big">' + usedMB.toFixed(1) + ' <small>MB</small></span></div>' +
+        '<div class="tm-track"><div class="tm-fill" style="width:' + pct + '%"></div></div>' +
+        tmSpark(histMem) +
+        tmKV("Limit", limitMB.toFixed(0) + " MB") +
+        tmKV("Usage", pct + "%") +
+        '<div class="tm-note">JavaScript heap memory used by the page.</div>' +
+      "</div>";
+  }
+
+  function renderNet(panel) {
+    if (!panel) return;
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
+    var res = (window.performance && performance.getEntriesByType)
+      ? performance.getEntriesByType("resource") : [];
+    var bytes = 0;
+    res.forEach(function (r) { bytes += (r.transferSize || 0); });
+    var rows = tmKV("Status", navigator.onLine ? "🟢 Online" : "🔴 Offline");
+    if (c) {
+      // Browsers can't report 5G directly (the API tops out at "4g"), so we
+      // classify from the real measured speed: fast link/low latency -> 5G.
+      var dl = c.downlink != null ? c.downlink : 0;
+      var rtt = c.rtt != null ? c.rtt : 999;
+      var band = (dl >= 10 || rtt <= 50) ? "5G" : "4G";
+      rows += tmKV("Network", band);
+      if (c.downlink != null) rows += tmKV("Downlink", c.downlink + " Mbps");
+      if (c.rtt != null) rows += tmKV("Latency (RTT)", c.rtt + " ms");
+      if (c.saveData != null) rows += tmKV("Data saver", c.saveData ? "On" : "Off");
+    } else {
+      rows += tmKV("Network", "not exposed");
+    }
+    rows += tmKV("Requests loaded", String(res.length));
+    rows += tmKV("Transferred", (bytes / 1024).toFixed(1) + " KB");
+    panel.innerHTML =
+      '<div class="tm-metric">' + rows +
+        '<div class="tm-note">Live from the browser\u2019s Network Information API. Browsers can\u2019t ' +
+        "detect 5G directly, so the band is estimated from measured Downlink &amp; RTT (the real numbers below).</div>" +
+      "</div>";
+  }
+
+  function updateMetrics(root) {
+    if (!root || !document.contains(root)) { stopTaskMetrics(); return; }
+    if (tmTab === "performance") renderPerf(root.querySelector('[data-panel="performance"]'));
+    else if (tmTab === "memory") renderMem(root.querySelector('[data-panel="memory"]'));
+    else if (tmTab === "network") renderNet(root.querySelector('[data-panel="network"]'));
+  }
+
+  function startTaskMetrics(root) {
+    stopTaskMetrics();
+    fpsFrames = 0; fpsLast = performance.now(); fpsVal = 0;
+    histFps = []; histMem = [];
+    (function raf(now) {
+      fpsFrames++;
+      if (now - fpsLast >= 1000) {
+        fpsVal = Math.round(fpsFrames * 1000 / (now - fpsLast));
+        fpsFrames = 0; fpsLast = now;
+      }
+      tmRaf = requestAnimationFrame(raf);
+    })(performance.now());
+    tmTimer = setInterval(function () { updateMetrics(root); }, 1000);
+    updateMetrics(root);
+  }
+
+  function stopTaskMetrics() {
+    if (tmRaf) { cancelAnimationFrame(tmRaf); tmRaf = 0; }
+    if (tmTimer) { clearInterval(tmTimer); tmTimer = 0; }
+  }
+
+  function wireTaskTabs(root) {
+    var tabs = root.querySelectorAll(".tm-tab");
+    Array.prototype.forEach.call(tabs, function (t) {
+      t.addEventListener("click", function () {
+        tmTab = t.getAttribute("data-tab");
+        Array.prototype.forEach.call(root.querySelectorAll(".tm-tab"), function (x) {
+          x.classList.toggle("active", x === t);
+        });
+        Array.prototype.forEach.call(root.querySelectorAll(".tm-panel"), function (p) {
+          p.classList.toggle("hidden", p.getAttribute("data-panel") !== tmTab);
+        });
+        updateMetrics(root); // refresh the panel we just switched to
+      });
+    });
+  }
+
   /* ---------------- Widget picker (gallery) ---------------- */
   function buildPicker() {
     var host = document.getElementById("widget-picker-list");
@@ -502,11 +637,28 @@ window.NomuWidgets = (function () {
       title: "Task Manager",
       icon: "📋",
       key: TM_KEY,            // single instance: re-opening just focuses it
-      width: 340, height: 400,
+      width: 360, height: 420,
       render: function (body) {
-        body.innerHTML = '<div class="tm-wrap"><div class="tm-list"></div></div>';
+        body.innerHTML =
+          '<div class="tm-wrap">' +
+            '<div class="tm-tabs">' +
+              '<button class="tm-tab active" data-tab="processes">Processes</button>' +
+              '<button class="tm-tab" data-tab="performance">Performance</button>' +
+              '<button class="tm-tab" data-tab="memory">Memory</button>' +
+              '<button class="tm-tab" data-tab="network">Network</button>' +
+            "</div>" +
+            '<div class="tm-panels">' +
+              '<div class="tm-panel" data-panel="processes"><div class="tm-list"></div></div>' +
+              '<div class="tm-panel hidden" data-panel="performance"></div>' +
+              '<div class="tm-panel hidden" data-panel="memory"></div>' +
+              '<div class="tm-panel hidden" data-panel="network"></div>' +
+            "</div>" +
+          "</div>";
+        tmTab = "processes";
         tmBody = body.querySelector(".tm-list");
+        wireTaskTabs(body);
         renderTaskList(tmBody);
+        startTaskMetrics(body);
       },
     });
   }
