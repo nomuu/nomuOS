@@ -33,7 +33,7 @@ window.NomuDesktop = (function () {
       el.addEventListener("dblclick", function () { launch(app.id); });
       host.appendChild(el);
     });
-    buildProjectIcons(host);
+    buildProjectsFolder(host);
   }
 
   // Each project shows on the desktop as its own app icon.
@@ -43,19 +43,18 @@ window.NomuDesktop = (function () {
     return (p.featured || []).concat(p.others || []);
   }
 
-  function buildProjectIcons(host) {
-    var list = projectList();
-    if (!list.length || !window.NomuApps || !NomuApps.projects || typeof NomuApps.projects.launch !== "function") return;
-    list.forEach(function (proj) {
-      var el = document.createElement("button");
-      el.className = "desktop-icon project-icon";
-      el.innerHTML =
-        '<span class="glyph"><i class="' + (proj.icon || "fas fa-code") + '"></i></span>' +
-        '<span class="label"></span>';
-      el.querySelector(".label").textContent = proj.name;
-      el.addEventListener("dblclick", function () { NomuApps.projects.launch(proj); });
-      host.appendChild(el);
-    });
+  // A single "Projects" folder on the desktop; opening it shows all projects.
+  function buildProjectsFolder(host) {
+    var proj = window.NomuApps && window.NomuApps.projects;
+    if (!proj || typeof proj.open !== "function" || !projectList().length) return;
+    var el = document.createElement("button");
+    el.className = "desktop-icon projects-folder";
+    el.innerHTML =
+      '<span class="glyph">' + (proj.icon || "🗂️") + "</span>" +
+      '<span class="label"></span>';
+    el.querySelector(".label").textContent = proj.name || "Projects";
+    el.addEventListener("dblclick", function () { proj.open(); });
+    host.appendChild(el);
   }
 
   // Default start-menu apps: first 5 apps plus Settings (6 total).

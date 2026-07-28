@@ -338,19 +338,229 @@ window.NomuApps.werRU = {
         function etaFor(name, label) {
           return ETAS[Math.floor(Math.random() * ETAS.length)];
         }
-        // build a street-like route (right-angle dog-legs, a little jitter)
+        // ---- Real road-network routing (grid + diagonal avenues + roundabouts) ----
+        // We build a graph whose nodes are every point where roads cross (grid
+        // intersections, diagonal crossings, and where roads meet a roundabout
+        // ring) with edges running ALONG each road. A shortest-path search then
+        // rides real streets and will take a diagonal or loop a roundabout when
+        // that is genuinely shorter — just like a real maps app.
+        function nearestRoadPos(list, val) {
+          var best = list[0].p, bd = Math.abs(val - list[0].p);
+          for (var i = 1; i < list.length; i++) {
+            var d = Math.abs(val - list[i].p);
+            if (d < bd) { bd = d; best = list[i].p; }
+          }
+          return best;
+        }
+        // segment-segment intersection (null if they don't cross)
+        function segInt(p1, p2, p3, p4) {
+          var d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
+          if (Math.abs(d) < 1e-9) return null;
+          var t = ((p3.x - p1.x) * (p4.y - p3.y) - (p3.y - p1.y) * (p4.x - p3.x)) / d;
+          var u = ((p3.x - p1.x) * (p2.y - p1.y) - (p3.y - p1.y) * (p2.x - p1.x)) / d;
+          if (t < 0 || t > 1 || u < 0 || u > 1) return null;
+          return { x: p1.x + t * (p2.x - p1.x), y: p1.y + t * (p2.y - p1.y) };
+        }
+
+        var netNodes = {};   // key -> { x, y, adj: { key: dist } }
+        function nkey(x, y) { return Math.round(x) + "|" + Math.round(y); }
+        function nNode(x, y) {
+          var k = nkey(x, y);
+          if (!netNodes[k]) netNodes[k] = { x: x, y: y, adj: {} };
+          return k;
+        }
+        function nLink(k1, k2) {
+          if (k1 === k2) return;
+          var a = netNodes[k1], b = netNodes[k2];
+          if (!a || !b) return;
+          var dd = Math.hypot(a.x - b.x, a.y - b.y);
+          if (a.adj[k2] == null || dd < a.adj[k2]) { a.adj[k2] = dd; b.adj[k1] = dd; }
+        }
+
+        (function buildRoadGraph() {
+          var Vs = roadsV.map(function (r) { return r.p; });
+          var Hs = roadsH.map(function (r) { return r.p; });
+          var onV = Vs.map(function () { return []; });   // crossings on each vertical road
+          var onH = Hs.map(function () { return []; });   // crossings on each horizontal road
+          var onD = roadsDiag.map(function () { return []; });
+          var onC = circles.map(function () { return []; });
+
+          // grid intersections (vertical x horizontal) — shared by both roads
+          for (var i = 0; i < Vs.length; i++) {
+            for (var j = 0; j < Hs.length; j++) {
+              var k = nNode(Vs[i], Hs[j]);
+              onV[i].push({ x: Vs[i], y: Hs[j], k: k });
+              onH[j].push({ x: Vs[i], y: Hs[j], k: k });
+            }
+          }
+          // diagonal avenues x grid
+          for (var d = 0; d < roadsDiag.length; d++) {
+            var A = roadsDiag[d].a, B = roadsDiag[d].b, ddx = B.x - A.x, ddy = B.y - A.y;
+            for (var iv = 0; iv < Vs.length; iv++) {
+              if (ddx === 0) continue;
+              var t = (Vs[iv] - A.x) / ddx;
+              if (t < 0 || t > 1) continue;
+              var yy = A.y + t * ddy;
+              if (yy < 0 || yy > MH) continue;
+              var kk = nNode(Vs[iv], yy);
+              onV[iv].push({ x: Vs[iv], y: yy, k: kk });
+              onD[d].push({ x: Vs[iv], y: yy, k: kk });
+            }
+            for (var jh = 0; jh < Hs.length; jh++) {
+              if (ddy === 0) continue;
+              var t2 = (Hs[jh] - A.y) / ddy;
+              if (t2 < 0 || t2 > 1) continue;
+              var xx = A.x + t2 * ddx;
+              if (xx < 0 || xx > MW) continue;
+              var kx = nNode(xx, Hs[jh]);
+              onH[jh].push({ x: xx, y: Hs[jh], k: kx });
+              onD[d].push({ x: xx, y: Hs[jh], k: kx });
+            }
+          }
+          // diagonal x diagonal
+          for (var da = 0; da < roadsDiag.length; da++) {
+            for (var db = da + 1; db < roadsDiag.length; db++) {
+              var p = segInt(roadsDiag[da].a, roadsDiag[da].b, roadsDiag[db].a, roadsDiag[db].b);
+              if (!p || p.x < 0 || p.x > MW || p.y < 0 || p.y > MH) continue;
+              var kd = nNode(p.x, p.y);
+              onD[da].push({ x: p.x, y: p.y, k: kd });
+              onD[db].push({ x: p.x, y: p.y, k: kd });
+            }
+          }
+          // roundabout rings: where each circle meets the roads passing through it
+          for (var c = 0; c < circles.length; c++) {
+            var C = circles[c];
+            for (var iv2 = 0; iv2 < Vs.length; iv2++) {
+              var vx0 = Vs[iv2], dx = vx0 - C.x;
+              if (Math.abs(dx) > C.r) continue;
+              var off = Math.sqrt(C.r * C.r - dx * dx);
+              [C.y - off, C.y + off].forEach(function (yv) {
+                if (yv < 0 || yv > MH) return;
+                var kc = nNode(vx0, yv);
+                onV[iv2].push({ x: vx0, y: yv, k: kc });
+                onC[c].push({ x: vx0, y: yv, k: kc });
+              });
+            }
+            for (var jh2 = 0; jh2 < Hs.length; jh2++) {
+              var hy0 = Hs[jh2], dy = hy0 - C.y;
+              if (Math.abs(dy) > C.r) continue;
+              var offx = Math.sqrt(C.r * C.r - dy * dy);
+              [C.x - offx, C.x + offx].forEach(function (xv) {
+                if (xv < 0 || xv > MW) return;
+                var kc2 = nNode(xv, hy0);
+                onH[jh2].push({ x: xv, y: hy0, k: kc2 });
+                onC[c].push({ x: xv, y: hy0, k: kc2 });
+              });
+            }
+          }
+
+          // connect consecutive crossings along each road
+          function connectSorted(list, cmp) {
+            list.sort(cmp);
+            for (var m = 1; m < list.length; m++) nLink(list[m - 1].k, list[m].k);
+          }
+          for (var a1 = 0; a1 < onV.length; a1++) connectSorted(onV[a1], function (p, q) { return p.y - q.y; });
+          for (var a2 = 0; a2 < onH.length; a2++) connectSorted(onH[a2], function (p, q) { return p.x - q.x; });
+          for (var a3 = 0; a3 < onD.length; a3++) {
+            var A2 = roadsDiag[a3].a, B2 = roadsDiag[a3].b, ux = B2.x - A2.x, uy = B2.y - A2.y;
+            connectSorted(onD[a3], function (p, q) { return (p.x * ux + p.y * uy) - (q.x * ux + q.y * uy); });
+          }
+          // ring nodes: connect around the circle by angle, then close the loop
+          for (var a4 = 0; a4 < onC.length; a4++) {
+            var Cc = circles[a4], ring = onC[a4];
+            if (ring.length < 2) continue;
+            ring.sort(function (p, q) {
+              return Math.atan2(p.y - Cc.y, p.x - Cc.x) - Math.atan2(q.y - Cc.y, q.x - Cc.x);
+            });
+            for (var m2 = 1; m2 < ring.length; m2++) nLink(ring[m2 - 1].k, ring[m2].k);
+            nLink(ring[ring.length - 1].k, ring[0].k);
+          }
+        })();
+
+        // nearest existing graph node to an arbitrary point
+        function nearestNode(x, y) {
+          var best = null, bd = Infinity;
+          for (var k in netNodes) {
+            var n = netNodes[k];
+            var dd = (n.x - x) * (n.x - x) + (n.y - y) * (n.y - y);
+            if (dd < bd) { bd = dd; best = k; }
+          }
+          return best;
+        }
+        // Temporarily attach an off-road endpoint: snap it onto the nearest road
+        // and link it to every node sharing that road line (so the router can head
+        // off in either direction, onto a diagonal, etc.). Returns the node key.
+        function attachEndpoint(P, temp) {
+          var vx = nearestRoadPos(roadsV, P.x), hy = nearestRoadPos(roadsH, P.y);
+          var sx, sy;
+          if (Math.abs(P.x - vx) <= Math.abs(P.y - hy)) { sx = vx; sy = P.y; }
+          else { sx = P.x; sy = hy; }
+          var k = nNode(sx, sy);
+          temp.push(k);
+          var linked = 0;
+          for (var kk in netNodes) {
+            if (kk === k) continue;
+            var n = netNodes[kk];
+            if (Math.abs(n.x - sx) < 0.5 || Math.abs(n.y - sy) < 0.5) { nLink(k, kk); linked++; }
+          }
+          if (!linked) { var nn = nearestNode(sx, sy); if (nn) nLink(k, nn); }
+          return { key: k, x: sx, y: sy };
+        }
+
+        // Dijkstra shortest path over the road graph
+        function dijkstra(startK, goalK) {
+          var dist = {}, prev = {}, done = {};
+          for (var k in netNodes) dist[k] = Infinity;
+          if (dist[startK] == null) return null;
+          dist[startK] = 0;
+          while (true) {
+            var u = null, ud = Infinity;
+            for (var kk in dist) { if (!done[kk] && dist[kk] < ud) { ud = dist[kk]; u = kk; } }
+            if (u === null || u === goalK) break;
+            done[u] = true;
+            var adj = netNodes[u].adj;
+            for (var v in adj) {
+              var nd = dist[u] + adj[v];
+              if (nd < dist[v]) { dist[v] = nd; prev[v] = u; }
+            }
+          }
+          if (dist[goalK] === Infinity) return null;
+          var path = [], cur = goalK;
+          while (cur != null) { path.unshift(netNodes[cur]); cur = prev[cur]; }
+          return path;
+        }
+
+        function dedupePts(pts) {
+          var out = [];
+          for (var i = 0; i < pts.length; i++) {
+            var p = pts[i], last = out[out.length - 1];
+            if (!last || Math.abs(last.x - p.x) > 0.5 || Math.abs(last.y - p.y) > 0.5) out.push(p);
+          }
+          return out;
+        }
+
         function makeRoutePath(from, to) {
-          var midX = from.x + (to.x - from.x) * (0.35 + Math.random() * 0.3);
-          var midY = from.y + (to.y - from.y) * (0.45 + Math.random() * 0.25);
-          var midX2 = midX + (to.x - midX) * (0.4 + Math.random() * 0.4);
-          return [
-            { x: from.x, y: from.y },
-            { x: midX, y: from.y },
-            { x: midX, y: midY },
-            { x: midX2, y: midY },
-            { x: midX2, y: to.y },
-            { x: to.x, y: to.y },
-          ];
+          var temp = [];
+          var sf = attachEndpoint(from, temp);
+          var st = attachEndpoint(to, temp);
+          var path = dijkstra(sf.key, st.key);
+          var pts;
+          if (!path) {
+            // fallback: straight stubs (shouldn't normally happen)
+            pts = [{ x: from.x, y: from.y }, { x: sf.x, y: sf.y }, { x: st.x, y: st.y }, { x: to.x, y: to.y }];
+          } else {
+            pts = [{ x: from.x, y: from.y }];   // true start (off-road pin)
+            path.forEach(function (n) { pts.push({ x: n.x, y: n.y }); });
+            pts.push({ x: to.x, y: to.y });     // short stub to the destination pin
+          }
+          // remove the temporary endpoint nodes so the graph is clean next time
+          temp.forEach(function (k) {
+            var n = netNodes[k];
+            if (!n) return;
+            for (var nb in n.adj) { if (netNodes[nb]) delete netNodes[nb].adj[k]; }
+            delete netNodes[k];
+          });
+          return dedupePts(pts);
         }
 
         function renderSuggestions() {
@@ -410,6 +620,10 @@ window.NomuApps.werRU = {
             var to = { x: pin.x, y: pin.y };
             var ang = Math.random() * Math.PI * 2, dist = 700 + Math.random() * 1500;
             var from = { x: to.x + Math.cos(ang) * dist, y: to.y + Math.sin(ang) * dist };
+            // keep the start inside the mapped grid so it snaps to a nearby road
+            // (otherwise the driveway stub can run long across empty blocks)
+            from.x = clamp(from.x, 260, MW - 260);
+            from.y = clamp(from.y, 260, MH - 260);
             var fromPlace = POOL[Math.floor(Math.random() * POOL.length)];
             route = { from: from, to: to, pts: makeRoutePath(from, to), t0: performance.now(), fromLabel: fromPlace.e + " " + fromPlace.t };
             // fit both points in view

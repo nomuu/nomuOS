@@ -736,17 +736,6 @@ a.wg-proj:hover { border-color: var(--accent); background: rgba(124,92,255,0.12)
 /* ============================================================
    Projects as desktop apps
    ============================================================ */
-/* project desktop icon = gradient app tile with a Font Awesome glyph */
-.desktop-icon.project-icon .glyph {
-  width: 52px; height: 52px; border-radius: 14px;
-  display: grid; place-items: center; margin: 0 auto;
-  color: #fff; font-size: 24px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 8px 20px rgba(124, 92, 255, 0.35);
-  transition: transform 0.12s;
-}
-.desktop-icon.project-icon:hover .glyph { transform: translateY(-2px) scale(1.03); }
-
 /* single-project app window */
 .proj-app {
   padding: 26px; height: 100%;
