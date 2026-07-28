@@ -163,6 +163,39 @@ body.wm-maximized #kofi-pin {
   pointer-events: none;
   transition: opacity 0.15s ease;
 }
+
+/* ---- Buy-me-a-coffee pin: icon only, text on hover, QR on click ---- */
+.kofi-pin {
+  position: fixed; top: 60px; right: 16px; z-index: 5990;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+  font-family: var(--font, "Segoe UI", sans-serif); color: #fff;
+}
+.kfp-row { display: flex; align-items: center; gap: 8px; }
+.kfp-text {
+  opacity: 0; transform: translateX(8px); pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  background: rgba(20,24,51,.65); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.18);
+  padding: 8px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  white-space: nowrap; box-shadow: 0 6px 16px rgba(0,0,0,.28);
+}
+.kofi-pin:hover .kfp-text { opacity: 1; transform: none; }
+.kfp-icon {
+  width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,.18);
+  background: rgba(20,24,51,.55); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 22px rgba(0,0,0,.3);
+  font-size: 24px; line-height: 1; cursor: pointer; display: grid; place-items: center;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.kfp-icon:hover { transform: translateY(-2px) scale(1.05); background: rgba(114,164,242,.35); }
+.kfp-qr {
+  background: #fff; border-radius: 12px; padding: 10px; text-align: center;
+  width: 200px; box-shadow: 0 8px 22px rgba(0,0,0,.3); animation: windowIn 0.15s ease;
+}
+.kfp-qr.hidden { display: none; }
+.kfp-qr-img { width: 100%; max-width: 180px; height: auto; display: block; margin: 0 auto; border-radius: 6px; }
+.kfp-qr-fallback { color: #333; font-size: 11px; line-height: 1.5; padding: 24px 6px; }
+.kfp-thanks { color: #333; font-size: 12px; font-weight: 600; margin-top: 6px; }
 @keyframes windowIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
 
 .window-titlebar {

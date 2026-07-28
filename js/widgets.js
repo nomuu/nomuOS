@@ -164,39 +164,40 @@ window.NomuWidgets = (function () {
 
     var GCASH_QR = "img/qr/gcash.png";
 
-    var card = document.createElement("div");
-    card.id = "kofi-pin";
-    card.className = "kofi-pin";
-    card.style.cssText =
-      "position:fixed;top:60px;right:16px;z-index:5990;width:236px;padding:14px;" +
-      "border-radius:16px;color:#fff;font-family:var(--font,'Segoe UI',sans-serif);" +
-      "background:rgba(20,24,51,.55);backdrop-filter:blur(10px);" +
-      "-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);" +
-      "box-shadow:0 8px 22px rgba(0,0,0,.3);";
+    var pin = document.createElement("div");
+    pin.id = "kofi-pin";
+    pin.className = "kofi-pin";
+    pin.innerHTML =
+      '<div class="kfp-row">' +
+        '<span class="kfp-text">you know, let me buy you a coffee</span>' +
+        '<button class="kfp-icon" title="Buy me a coffee">☕</button>' +
+      "</div>" +
+      '<div class="kfp-qr hidden">' +
+        '<img src="' + GCASH_QR + '" alt="GCash QR" class="kfp-qr-img" ' +
+          "onerror=\"this.style.display='none';this.nextElementSibling.style.display='block';\">" +
+        '<div class="kfp-qr-fallback" style="display:none;">Ilagay ang QR:<br>' + GCASH_QR + "</div>" +
+        '<div class="kfp-thanks">Salamat! 💛</div>' +
+      "</div>";
 
-    function render() {
-      card.innerHTML =
-        '<div style="font-size:40px;line-height:1;text-align:center;margin-bottom:12px;">☕</div>' +
-        '<button class="kfp-go" style="width:100%;padding:10px;border-radius:12px;border:none;' +
-          'cursor:pointer;background:#72a4f2;color:#fff;font-weight:600;font-size:13px;">' +
-          "you know, let me buy you a coffee</button>" +
-        '<div class="kfp-qr" style="display:none;background:#fff;border-radius:12px;padding:10px;' +
-          'margin-top:10px;text-align:center;">' +
-          '<img src="' + GCASH_QR + '" alt="GCash QR" ' +
-            'style="width:100%;max-width:180px;height:auto;display:block;margin:0 auto;border-radius:6px;" ' +
-            "onerror=\"this.style.display='none';this.nextElementSibling.style.display='block';\">" +
-          '<div style="display:none;color:#333;font-size:11px;line-height:1.5;padding:24px 6px;">' +
-            "Ilagay ang QR:<br>" + GCASH_QR + "</div>" +
-          '<div style="color:#333;font-size:12px;font-weight:600;margin-top:6px;">Salamat! 💛</div>' +
-        "</div>";
-      var qr = card.querySelector(".kfp-qr");
-      card.querySelector(".kfp-go").addEventListener("click", function () {
-        if (qr) qr.style.display = "block";
-        this.style.display = "none";
-      });
+    var icon = pin.querySelector(".kfp-icon");
+    var qr = pin.querySelector(".kfp-qr");
+    var qrTimer = null;
+
+    function hideQR() {
+      qr.classList.add("hidden");
+      if (qrTimer) { clearTimeout(qrTimer); qrTimer = null; }
     }
-    render();
-    host.appendChild(card);
+    function showQR() {
+      qr.classList.remove("hidden");
+      if (qrTimer) clearTimeout(qrTimer);
+      qrTimer = setTimeout(hideQR, 60000); // auto-close after 1 minute
+    }
+    icon.addEventListener("click", function () {
+      if (qr.classList.contains("hidden")) showQR();
+      else hideQR();
+    });
+
+    host.appendChild(pin);
   }
 
   /* ---------------- Persistence ---------------- */
