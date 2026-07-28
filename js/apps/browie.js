@@ -112,37 +112,61 @@ window.NomuApps.browie = {
         }
 
         /* ---------- pages ---------- */
+        // News topics shown as chips on the home page. An empty query maps to
+        // Bing's top-stories page; the rest use Bing News search.
+        var NEWS_TOPICS = [
+          { label: "Top stories", q: "" },
+          { label: "Philippines", q: "Philippines" },
+          { label: "Technology", q: "technology" },
+          { label: "Business", q: "business" },
+          { label: "Science", q: "science" },
+          { label: "Sports", q: "sports" },
+          { label: "Entertainment", q: "entertainment" },
+        ];
+        function newsUrl(q) {
+          return q
+            ? "https://www.bing.com/news/search?q=" + encodeURIComponent(q)
+            : "https://www.bing.com/news";
+        }
+
         function renderHome() {
-          var projects = ((window.NomuProfile || {}).projects) || {};
-          var all = (projects.featured || []).concat(projects.others || []);
-          var name = (window.NomuProfile || {}).name || "My";
-          var tiles = all.map(function (p) {
-            var live = p.url && p.url !== "#";
-            return (
-              '<button class="bw-tile' + (live ? "" : " disabled") + '" data-url="' + esc(live ? p.url : "") + '">' +
-                '<span class="bw-tile-icon"><i class="' + (p.icon || "fas fa-code") + '"></i></span>' +
-                '<span class="bw-tile-name">' + esc(p.name) + "</span>" +
-              "</button>"
-            );
+          var chips = NEWS_TOPICS.map(function (t, i) {
+            return '<button class="bw-chip' + (i === 0 ? " active" : "") + '" data-q="' + esc(t.q) + '">' +
+              esc(t.label) + "</button>";
           }).join("");
+
           homePage.innerHTML =
-            '<div class="bw-home-inner">' +
-              '<div class="bw-home-logo">Browie</div>' +
-              '<div class="bw-home-sub">' + esc(name) + "'s projects</div>" +
-              '<div class="bw-home-search">' +
-                '<input id="bw-home-q" placeholder="Search the web…" spellcheck="false" />' +
-                '<button id="bw-home-go">Search</button>' +
+            '<div class="bw-news">' +
+              '<div class="bw-news-head">' +
+                '<div class="bw-news-top">' +
+                  '<span class="bw-news-logo">Browie</span>' +
+                  '<div class="bw-news-search">' +
+                    '<input id="bw-home-q" placeholder="Search the web…" spellcheck="false" />' +
+                    '<button id="bw-home-go">Search</button>' +
+                  "</div>" +
+                "</div>" +
+                '<div class="bw-news-chips">' + chips + "</div>" +
               "</div>" +
-              '<div class="bw-home-grid">' + tiles + "</div>" +
+              '<iframe class="bw-news-frame" id="bw-news-frame" title="News" ' +
+                'sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" ' +
+                'referrerpolicy="no-referrer"></iframe>' +
             "</div>";
+
+          var newsFrame = homePage.querySelector("#bw-news-frame");
+          newsFrame.src = newsUrl(NEWS_TOPICS[0].q);
+
+          // web-search box (unchanged): free text -> web search in the main frame
           var q = homePage.querySelector("#bw-home-q");
           function runSearch() { if (q.value.trim()) navigate(q.value); }
           homePage.querySelector("#bw-home-go").addEventListener("click", runSearch);
           q.addEventListener("keydown", function (e) { if (e.key === "Enter") runSearch(); });
-          homePage.querySelectorAll(".bw-tile").forEach(function (t) {
-            t.addEventListener("click", function () {
-              var u = t.getAttribute("data-url");
-              if (u) navigate(u);
+
+          // topic chips swap the news feed without leaving the home page
+          homePage.querySelectorAll(".bw-chip").forEach(function (chip) {
+            chip.addEventListener("click", function () {
+              homePage.querySelectorAll(".bw-chip").forEach(function (c) { c.classList.remove("active"); });
+              chip.classList.add("active");
+              newsFrame.src = newsUrl(chip.getAttribute("data-q"));
             });
           });
         }
