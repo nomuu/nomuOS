@@ -72,14 +72,16 @@ window.NomuApps.helloMoon = {
         camera.position.set(0, 20, 40);
 
         /* ================= lights ================= */
-        // Ambient fill lifted a bit so the far/night side of the globe stays
-        // navigable as you drive around it (the headlight helps too).
-        scene.add(new THREE.HemisphereLight(0x6b7a9a, 0x0a0a14, 0.75));
-        var sun = new THREE.DirectionalLight(0xfff6e8, 1.15);
+        // Kept just bright enough that the far/night side of the globe stays
+        // navigable as you drive around it (the headlight helps too), but
+        // dimmer than before so craters actually carve out real shadow —
+        // a flatly-lit moon is what read as "fake" in the first place.
+        scene.add(new THREE.HemisphereLight(0x6b7a9a, 0x0a0a14, 0.45));
+        var sun = new THREE.DirectionalLight(0xfff6e8, 1.35);
         sun.position.set(120, 90, 60);
         scene.add(sun);
         // subtle blue "earthshine" fill from the opposite side
-        var earthShine = new THREE.DirectionalLight(0x4a6cff, 0.4);
+        var earthShine = new THREE.DirectionalLight(0x4a6cff, 0.35);
         earthShine.position.set(-90, 40, -120);
         scene.add(earthShine);
 
@@ -206,7 +208,10 @@ window.NomuApps.helloMoon = {
 
         // Craters live at a direction on the sphere with an angular radius.
         // They are baked into the geometry, so their bowls + raised rims are
-        // real 3D shapes that self-shadow — no painted rings anywhere.
+        // real 3D shapes that self-shadow. The colour map below reads this
+        // SAME list (by direction, not by flat canvas x/y) so the dark
+        // crater floors and bright rims it paints line up exactly with the
+        // bumps and shadows already in the mesh.
         var CRATERS = [];
         (function seedCraters() {
           var rng = 1337;
@@ -221,15 +226,36 @@ window.NomuApps.helloMoon = {
             });
           }
         })();
+        // A few of the biggest craters read as young & "fresh" — real moons
+        // show bright ray systems of ejecta splashed out from craters like
+        // that (think Tycho). Pick the 3 largest and give each a deterministic
+        // fan of irregular rays to paint into the colour map.
+        var RAYED_CRATERS = CRATERS.slice().sort(function (a, b) { return b.angR - a.angR; }).slice(0, 3);
+        RAYED_CRATERS.forEach(function (c, i) {
+          var up0 = Math.abs(c.dir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+          c.rayT1 = new THREE.Vector3().crossVectors(c.dir, up0).normalize();
+          c.rayT2 = new THREE.Vector3().crossVectors(c.dir, c.rayT1).normalize();
+          c.rayN = 9 + (i % 3) * 2;      // spoke count
+          c.raySeed = i * 17.3 + 4;      // breaks up each ray fan differently
+        });
+
+        // Base terrain relief (gentle rolling ground, no craters) — shared by
+        // the geometry height and the colour map's broad maria/highlands
+        // shading so the two stay visually in sync. This is real irregular
+        // fbm noise, not a product of two axis-aligned sine waves — a sine
+        // grid wraps around a sphere as an unmistakable regular woven/
+        // corduroy pattern once lit, which is exactly what read as "fake"
+        // and not like an actual moon.
+        function duneHeight(x, y, z) {
+          var n = fbm3(x * 5.5, y * 5.5, z * 5.5, 4);   // ~0..1
+          return (n - 0.5) * 3.6;
+        }
 
         // Surface height
         // Used by the mesh, the rover and every POI so they all agree.
         function heightAt(dir) {
-          var x = dir.x, y = dir.y, z = dir.z, h = 0;
-          // layered dune ripples over the whole globe
-          h += Math.sin(x * 38) * Math.cos(z * 38) * 1.8;
-          h += Math.sin(y * 70 + 1.3) * Math.cos(x * 60) * 0.9;
-          h += Math.sin(z * 130 + 2.1) * Math.cos(y * 110) * 0.4;
+          var x = dir.x, y = dir.y, z = dir.z;
+          var h = duneHeight(x, y, z);
           // craters: bowl + raised rim, by angular distance from each centre
           for (var i = 0; i < CRATERS.length; i++) {
             var c = CRATERS[i];
@@ -244,65 +270,108 @@ window.NomuApps.helloMoon = {
           return h;
         }
 
-        // Procedural regolith texture: multi-octave value noise for the dusty
-        // mottling plus soft maria. Used as colour map + bump map so the surface
-        // reads as real moon dust. (Craters are geometry, not painted here.)
+        /* ---- seamless 3D noise ----
+           Sampled at the same unit DIRECTION used everywhere else, instead of
+           flat canvas x/y. A flat 2D noise field always shows a visible stitch
+           once it's wrapped around a globe (the old version did, right down
+           the back of the moon); a continuous function of (x,y,z) never does. */
+        function hash3(x, y, z) {
+          var n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453;
+          return n - Math.floor(n);
+        }
+        function lerp3(a, b, t) { return a + (b - a) * t; }
+        function vnoise3(x, y, z) {
+          var xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+          var xf = x - xi, yf = y - yi, zf = z - zi;
+          var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
+          var x00 = lerp3(hash3(xi, yi, zi), hash3(xi + 1, yi, zi), u);
+          var x10 = lerp3(hash3(xi, yi + 1, zi), hash3(xi + 1, yi + 1, zi), u);
+          var x01 = lerp3(hash3(xi, yi, zi + 1), hash3(xi + 1, yi, zi + 1), u);
+          var x11 = lerp3(hash3(xi, yi + 1, zi + 1), hash3(xi + 1, yi + 1, zi + 1), u);
+          return lerp3(lerp3(x00, x10, v), lerp3(x01, x11, v), w);
+        }
+        function fbm3(x, y, z, octaves) {
+          var a = 0, amp = 0.5, f = 1;
+          for (var o = 0; o < octaves; o++) { a += vnoise3(x * f, y * f, z * f) * amp; f *= 2; amp *= 0.5; }
+          return a;
+        }
+
+        // Procedural regolith colour + bump map. Painted per DIRECTION (not
+        // per flat pixel) so dark maria, bright highlands, crater floors,
+        // crater rims and ray systems all line up with the real 3D geometry
+        // and wrap around the whole globe with no seam. Real moon dust is a
+        // genuinely dark, low-contrast surface (~12% albedo) — the old flat
+        // pale-grey fill was a big part of why it didn't read as "the moon".
         function makeMoonSurface() {
-          var S = 768;
+          var S = 900;
           var cv = document.createElement("canvas");
           cv.width = cv.height = S;
           var g = cv.getContext("2d");
-
-          function hash(x, y) { var n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n); }
-          function lerp(a, b, t) { return a + (b - a) * t; }
-          function vnoise(x, y) {
-            var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
-            var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
-            return lerp(lerp(hash(xi, yi), hash(xi + 1, yi), u),
-                        lerp(hash(xi, yi + 1), hash(xi + 1, yi + 1), u), v);
-          }
-          function fbm(x, y) {
-            var a = 0, amp = 0.5, f = 1;
-            for (var o = 0; o < 5; o++) { a += vnoise(x * f, y * f) * amp; f *= 2; amp *= 0.5; }
-            return a;
-          }
-
           var img = g.createImageData(S, S), d = img.data;
+
           for (var py = 0; py < S; py++) {
+            var phi = (py / S) * Math.PI;              // 0 (north pole) .. π (south)
+            var sinPhi = Math.sin(phi), cosPhi = Math.cos(phi);
             for (var px = 0; px < S; px++) {
-              var v = fbm(px / 46, py / 46);
-              var base = 92 + v * 82;                 // grey regolith
-              var i = (py * S + px) * 4;
-              d[i] = base; d[i + 1] = base * 0.97; d[i + 2] = base * 0.9; d[i + 3] = 255; // faint warm tint
+              var theta = (px / S) * Math.PI * 2;       // matches THREE.SphereGeometry's own UV wrap
+              var x = -Math.cos(theta) * sinPhi, y = cosPhi, z = Math.sin(theta) * sinPhi;
+
+              // fine dusty grain + broad "continent" shading
+              var fine = fbm3(x * 22, y * 22, z * 22, 4);
+              var relief = duneHeight(x, y, z) / 1.8;              // same relief the mesh is built from, ~-1..1
+              var val = 54 + fine * 42 + relief * 30;
+
+              // craters baked from the SAME list heightAt() uses
+              for (var i = 0; i < CRATERS.length; i++) {
+                var c = CRATERS[i];
+                var dot = x * c.dir.x + y * c.dir.y + z * c.dir.z;
+                if (dot < 0.6) continue;
+                var ang = Math.acos(dot < 1 ? dot : 1);
+                var nd = ang / c.angR;
+                if (nd < 1) val -= 30 * (1 - nd * nd);            // shadowed bowl
+                var rim = (nd - 1) / 0.35;
+                val += Math.exp(-rim * rim) * 34;                 // bright rim
+              }
+
+              // ray systems radiating out from the biggest, "freshest" craters
+              for (var r = 0; r < RAYED_CRATERS.length; r++) {
+                var rc = RAYED_CRATERS[r];
+                var rdot = x * rc.dir.x + y * rc.dir.y + z * rc.dir.z;
+                if (rdot < 0.3) continue;
+                var rAng = Math.acos(rdot < 1 ? rdot : 1);
+                var rNd = rAng / rc.angR;
+                if (rNd < 1.3 || rNd > 8) continue;
+                var vx = x - rc.dir.x * rdot, vy = y - rc.dir.y * rdot, vz = z - rc.dir.z * rdot;
+                var bearing = Math.atan2(vx * rc.rayT2.x + vy * rc.rayT2.y + vz * rc.rayT2.z,
+                                          vx * rc.rayT1.x + vy * rc.rayT1.y + vz * rc.rayT1.z);
+                var spoke = bearing / (Math.PI * 2) * rc.rayN;
+                var toSpoke = Math.abs(spoke - Math.round(spoke));
+                if (toSpoke > 0.16) continue;
+                var mottle = fbm3(x * 30 + rc.raySeed, y * 30 + rc.raySeed, z * 30, 2);
+                var falloff = Math.exp(-rNd * 0.55) * (0.4 + mottle * 0.9);
+                val += (1 - toSpoke / 0.16) * falloff * 46;
+              }
+
+              val = Math.max(-20, Math.min(255, val));
+              val = 128 + (val - 128) * 1.12;                     // a touch more contrast
+              val = Math.max(8, Math.min(238, val));
+
+              // maria (low ground) read faintly cool/blue-grey, highlands
+              // (high ground) faintly warm/tan — the same subtle colour
+              // split real moon photos show
+              var tint = relief * 0.5;
+              var i4 = (py * S + px) * 4;
+              d[i4] = Math.max(0, Math.min(255, val + tint * 9));
+              d[i4 + 1] = Math.max(0, Math.min(255, val + tint * 3));
+              d[i4 + 2] = Math.max(0, Math.min(255, val - tint * 10));
+              d[i4 + 3] = 255;
             }
           }
           g.putImageData(img, 0, 0);
 
-          // NOTE: craters are now REAL geometry on the sphere (see heightAt),
-          // so their depth and rims come from actual shading — no more painted
-          // white rings. Here we only add broad, soft "maria" (the dark lunar
-          // seas) and faint bright highlands as gentle gradients, which read as
-          // natural surface colour and never as hard circles.
-          for (var m = 0; m < 10; m++) {
-            var mx = Math.random() * S, my = Math.random() * S;
-            var mr = 120 + Math.random() * 260;
-            var dark = g.createRadialGradient(mx, my, 0, mx, my, mr);
-            dark.addColorStop(0, "rgba(38,36,40,0.28)");
-            dark.addColorStop(0.7, "rgba(38,36,40,0.10)");
-            dark.addColorStop(1, "rgba(38,36,40,0)");
-            g.fillStyle = dark; g.beginPath(); g.arc(mx, my, mr, 0, Math.PI * 2); g.fill();
-          }
-          for (var hh = 0; hh < 8; hh++) {
-            var hx = Math.random() * S, hy = Math.random() * S;
-            var hr = 90 + Math.random() * 180;
-            var light = g.createRadialGradient(hx, hy, 0, hx, hy, hr);
-            light.addColorStop(0, "rgba(210,206,196,0.10)");
-            light.addColorStop(1, "rgba(210,206,196,0)");
-            g.fillStyle = light; g.beginPath(); g.arc(hx, hy, hr, 0, Math.PI * 2); g.fill();
-          }
-
           var tex = new THREE.CanvasTexture(cv);
-          tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+          tex.wrapS = THREE.RepeatWrapping;    // seamless all the way around
+          tex.wrapT = THREE.ClampToEdgeWrapping;
           if (renderer.capabilities.getMaxAnisotropy) tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
           return tex;
         }
@@ -322,8 +391,8 @@ window.NomuApps.helloMoon = {
           var mat = new THREE.MeshStandardMaterial({
             map: surf,
             bumpMap: surf,
-            bumpScale: 0.6,
-            roughness: 0.97,
+            bumpScale: 0.7,
+            roughness: 0.94,
             metalness: 0.0,
           });
           scene.add(new THREE.Mesh(geo, mat));
