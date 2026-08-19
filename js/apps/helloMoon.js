@@ -725,21 +725,35 @@ window.NomuApps.helloMoon = {
         var camDist = 26, camHeight = 14;
         var camModes = [[26, 14], [46, 26], [16, 9]];
         var camModeIdx = 0;
-        var zoom = 1;              // multiplied on top of the preset (scroll wheel)
+        var zoom = 1;              // multiplied on top of the preset (scroll wheel / pinch)
         var ZOOM_MIN = 0.5, ZOOM_MAX = 12; // zoom way out to see the whole globe
+
+        // On mobile there's no keyboard, so this app is presented through the
+        // iOS-style sheet (see NomuMobile.presentApp) instead of a desktop
+        // window — swap in an on-screen joystick + buttons for driving.
+        var isMobile = !!(window.NomuMobile && window.NomuMobile.isActive());
+
+        function respawn() {
+          rov.pos.copy(START_POS); rov.fwd.copy(START_FWD); rov.speed = 0;
+        }
+        function cycleCamera() {
+          camModeIdx = (camModeIdx + 1) % camModes.length;
+          camDist = camModes[camModeIdx][0];
+          camHeight = camModes[camModeIdx][1];
+        }
 
         /* ================= input ================= */
         var keys = {};
+        // Touch-driven axes (joystick + boost button), read alongside `keys`
+        // in step() so the same drive code serves keyboard and touch.
+        var touchState = { turn: 0, thrust: 0, boost: false };
+
         function onKey(e) {
           var k = e.key.toLowerCase();
           keys[k] = true;
           if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].indexOf(k) !== -1) e.preventDefault();
           if (k === "r") respawn();
-          if (k === "c") {
-            camModeIdx = (camModeIdx + 1) % camModes.length;
-            camDist = camModes[camModeIdx][0];
-            camHeight = camModes[camModeIdx][1];
-          }
+          if (k === "c") cycleCamera();
         }
         function onKeyUp(e) { keys[e.key.toLowerCase()] = false; }
         function onWheel(e) {
@@ -754,11 +768,66 @@ window.NomuApps.helloMoon = {
         renderer.domElement.addEventListener("mousedown", function () { renderer.domElement.focus(); });
         setTimeout(function () { renderer.domElement.focus(); }, 60);
 
-        function respawn() {
-          rov.pos.copy(START_POS); rov.fwd.copy(START_FWD); rov.speed = 0;
+        // Pinch-to-zoom on touch (two fingers on the canvas), same effect as
+        // the desktop scroll wheel.
+        if (isMobile) {
+          var pinchPts = {}, pinchDist = null;
+          renderer.domElement.addEventListener("pointerdown", function (e) {
+            if (e.pointerType !== "touch") return;
+            pinchPts[e.pointerId] = { x: e.clientX, y: e.clientY };
+            if (Object.keys(pinchPts).length !== 2) pinchDist = null;
+          });
+          renderer.domElement.addEventListener("pointermove", function (e) {
+            if (!(e.pointerId in pinchPts)) return;
+            pinchPts[e.pointerId] = { x: e.clientX, y: e.clientY };
+            var ids = Object.keys(pinchPts);
+            if (ids.length !== 2) return;
+            var a = pinchPts[ids[0]], b = pinchPts[ids[1]];
+            var d = Math.hypot(b.x - a.x, b.y - a.y);
+            if (pinchDist != null) {
+              zoom *= Math.exp(-(d - pinchDist) * 0.006);
+              zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom));
+            }
+            pinchDist = d;
+          });
+          function endPinch(e) { delete pinchPts[e.pointerId]; pinchDist = null; }
+          renderer.domElement.addEventListener("pointerup", endPinch);
+          renderer.domElement.addEventListener("pointercancel", endPinch);
         }
 
         /* ================= HUD overlay ================= */
+        // pointer-events:none on the hud itself (so it never blocks the 3D
+        // view / drag-to-look); individual controls opt back in below.
+        var hintHtml = isMobile
+          ? '<div>🕹️ Joystick — drive</div>' +
+            '<div><b>⚡</b> boost · <b>↻</b> respawn · <b>⛶</b> camera</div>' +
+            '<div>Pinch — zoom in / out</div>'
+          : '<div><b>W A S D</b> / arrows — drive</div>' +
+            '<div><b>Shift</b> boost · <b>R</b> respawn · <b>C</b> camera</div>' +
+            '<div><b>Scroll</b> — zoom in / out (orbit the whole moon 🌙)</div>';
+
+        var touchBtnCss =
+          "width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.3);" +
+          "background:rgba(20,24,45,.6);color:#eaf0ff;font-size:18px;display:flex;" +
+          "align-items:center;justify-content:center;backdrop-filter:blur(6px);" +
+          "-webkit-tap-highlight-color:transparent;touch-action:none";
+        var touchCtrlsHtml = !isMobile ? "" :
+          '<div id="hm-joybase" style="position:absolute;left:20px;bottom:24px;width:114px;height:114px;' +
+            'border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.28);' +
+            'pointer-events:auto;touch-action:none;z-index:6">' +
+            '<div id="hm-joynub" style="position:absolute;left:50%;top:50%;width:52px;height:52px;' +
+              'margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.3);' +
+              'border:1px solid rgba(255,255,255,.55)"></div>' +
+          '</div>' +
+          '<div style="position:absolute;right:18px;bottom:20px;display:flex;flex-direction:column;' +
+            'align-items:center;gap:8px;pointer-events:auto;z-index:6">' +
+            '<div style="display:flex;gap:8px">' +
+              '<button id="hm-cam" style="' + touchBtnCss + '">⛶</button>' +
+              '<button id="hm-respawn" style="' + touchBtnCss + '">↻</button>' +
+            '</div>' +
+            '<button id="hm-boost" style="' + touchBtnCss + ';width:80px;height:52px;font:800 14px/1 \'Segoe UI\',sans-serif">⚡ BOOST</button>' +
+          '</div>';
+
         var hud = document.createElement("div");
         hud.style.cssText =
           "position:absolute;inset:0;pointer-events:none;color:#eaf0ff;" +
@@ -771,10 +840,9 @@ window.NomuApps.helloMoon = {
           '</div>' +
           '<div style="position:absolute;top:12px;right:14px;background:rgba(10,14,26,.55);' +
             'border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 14px;text-align:right;backdrop-filter:blur(4px)">' +
-            '<div><b>W A S D</b> / arrows — drive</div>' +
-            '<div><b>Shift</b> boost · <b>R</b> respawn · <b>C</b> camera</div>' +
-            '<div><b>Scroll</b> — zoom in / out (orbit the whole moon 🌙)</div>' +
+            hintHtml +
           '</div>' +
+          touchCtrlsHtml +
           '<div id="hm-toast" style="position:absolute;left:50%;top:22px;transform:translateX(-50%);' +
             'background:rgba(10,14,26,.7);border:1px solid rgba(255,255,255,.15);border-radius:20px;' +
             'padding:6px 16px;opacity:0;transition:opacity .35s;font-weight:600"></div>' +
@@ -787,6 +855,49 @@ window.NomuApps.helloMoon = {
             '<div style="margin-top:10px;font-size:11px;opacity:.55">click to close</div>' +
           '</div>';
         body.appendChild(hud);
+
+        if (isMobile) {
+          var joyBase = hud.querySelector("#hm-joybase");
+          var joyNub = hud.querySelector("#hm-joynub");
+          var joyId = null, joyCX = 0, joyCY = 0, joyR = 1;
+          function updateJoy(cx, cy) {
+            var dx = cx - joyCX, dy = cy - joyCY;
+            var d = Math.hypot(dx, dy);
+            var k = d > joyR ? joyR / d : 1;   // clamp the nub to the base's radius
+            var nx = dx * k, ny = dy * k;
+            joyNub.style.transform = "translate(" + nx + "px," + ny + "px)";
+            // dragging right steers right (turn<0, matching the D/→ key); dragging
+            // up drives forward (thrust>0, matching W/↑)
+            touchState.turn = Math.max(-1, Math.min(1, -nx / joyR));
+            touchState.thrust = Math.max(-1, Math.min(1, -ny / joyR));
+          }
+          function endJoy(e) {
+            if (e.pointerId !== joyId) return;
+            joyId = null;
+            touchState.turn = 0; touchState.thrust = 0;
+            joyNub.style.transform = "translate(0,0)";
+          }
+          joyBase.addEventListener("pointerdown", function (e) {
+            joyId = e.pointerId;
+            joyBase.setPointerCapture(joyId);
+            var r = joyBase.getBoundingClientRect();
+            joyCX = r.left + r.width / 2; joyCY = r.top + r.height / 2; joyR = r.width / 2;
+            updateJoy(e.clientX, e.clientY);
+          });
+          joyBase.addEventListener("pointermove", function (e) {
+            if (e.pointerId === joyId) updateJoy(e.clientX, e.clientY);
+          });
+          joyBase.addEventListener("pointerup", endJoy);
+          joyBase.addEventListener("pointercancel", endJoy);
+
+          var boostBtn = hud.querySelector("#hm-boost");
+          boostBtn.addEventListener("pointerdown", function (e) { e.preventDefault(); touchState.boost = true; });
+          ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+            boostBtn.addEventListener(ev, function () { touchState.boost = false; });
+          });
+          hud.querySelector("#hm-respawn").addEventListener("pointerdown", function (e) { e.preventDefault(); respawn(); });
+          hud.querySelector("#hm-cam").addEventListener("pointerdown", function (e) { e.preventDefault(); cycleCamera(); });
+        }
 
         var countEl = hud.querySelector("#hm-count");
         var toastEl = hud.querySelector("#hm-toast");
@@ -857,16 +968,18 @@ window.NomuApps.helloMoon = {
 
         function step(dt, t) {
           // ---- drive (on the surface of the sphere) ----
-          var boost = keys["shift"] ? 1.7 : 1;
+          var boost = (keys["shift"] || touchState.boost) ? 1.7 : 1;
           var accel = 46 * boost;
           var maxSpeed = 42 * boost;
-          var turn = 0;
+          var turn = touchState.turn;
           if (keys["a"] || keys["arrowleft"]) turn += 1;
           if (keys["d"] || keys["arrowright"]) turn -= 1;
+          turn = Math.max(-1, Math.min(1, turn));
 
-          var thrust = 0;
+          var thrust = touchState.thrust;
           if (keys["w"] || keys["arrowup"]) thrust += 1;
           if (keys["s"] || keys["arrowdown"]) thrust -= 1;
+          thrust = Math.max(-1, Math.min(1, thrust));
           rov.speed += thrust * accel * dt;
           rov.speed *= (1 - Math.min(1, 1.6 * dt)); // drag
           rov.speed = Math.max(-maxSpeed * 0.5, Math.min(maxSpeed, rov.speed));
@@ -949,11 +1062,14 @@ window.NomuApps.helloMoon = {
           }
         }
 
-        // minimap (2D canvas overlay, bottom-right)
+        // minimap (2D canvas overlay, bottom-right) — nudged up + shrunk a
+        // little on mobile so it clears the boost/camera/respawn buttons
+        var mmSize = isMobile ? 118 : 150;
         var mm = document.createElement("canvas");
-        mm.width = mm.height = 150;
+        mm.width = mm.height = mmSize;
         mm.style.cssText =
-          "position:absolute;right:14px;bottom:14px;width:150px;height:150px;" +
+          "position:absolute;right:14px;bottom:" + (isMobile ? 170 : 14) + "px;" +
+          "width:" + mmSize + "px;height:" + mmSize + "px;" +
           "border-radius:50%;border:1px solid rgba(255,255,255,.2);" +
           "background:rgba(8,10,20,.55);z-index:5;pointer-events:none;";
         body.appendChild(mm);
@@ -962,8 +1078,8 @@ window.NomuApps.helloMoon = {
           // Radar: rover always at centre, forward = up on the dial. Every POI
           // on the whole globe is shown by its bearing (angle) and great-circle
           // distance (radius) — including ones behind, above or below you.
-          var R = 75;
-          mmx.clearRect(0, 0, 150, 150);
+          var R = mmSize / 2;
+          mmx.clearRect(0, 0, mmSize, mmSize);
 
           var up = rov.pos;
           var right = _tmpRight.crossVectors(up, rov.fwd).normalize();

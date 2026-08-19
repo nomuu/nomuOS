@@ -30,6 +30,7 @@ window.NomuMobile = (function () {
     { type: "app", id: "calendar" },
     { type: "app", id: "nothing" },
     { type: "app", id: "spillTheTea" },
+    { type: "app", id: "helloMoon" },
     { type: "app", id: "werRU" },
     { type: "app", id: "kofi" },
     { type: "app", id: "settings" },
@@ -74,10 +75,80 @@ window.NomuMobile = (function () {
     return el;
   }
 
+  // Real phone home screens don't scroll — once a page of icons is full, the
+  // rest overflow onto additional swipeable pages with a dot indicator below.
+  var ICON_COLS = 4;
+  var pagesEl = null, dotsEl = null;
+
+  function buildPages(items) {
+    pagesEl.innerHTML = "";
+    dotsEl.innerHTML = "";
+
+    // Measure how many rows actually fit by test-rendering one page with
+    // everything in it, then re-chunk into properly sized pages. Cheap
+    // (one extra reflow) and stays correct across any screen/orientation.
+    var probePage = document.createElement("div");
+    probePage.className = "m-page";
+    var probeGrid = document.createElement("div");
+    probeGrid.className = "m-grid";
+    items.forEach(function (it) { probeGrid.appendChild(iconEl(it)); });
+    probePage.appendChild(probeGrid);
+    pagesEl.appendChild(probePage);
+
+    var perPage = items.length;
+    var pagesH = pagesEl.clientHeight;
+    var firstIcon = probeGrid.querySelector(".m-icon");
+    if (pagesH > 0 && firstIcon) {
+      var rowStep = firstIcon.getBoundingClientRect().height + 18; // + row gap
+      var rows = Math.max(1, Math.floor(pagesH / rowStep));
+      perPage = Math.max(ICON_COLS, rows * ICON_COLS);
+    }
+    pagesEl.innerHTML = "";
+
+    var pages = [];
+    for (var i = 0; i < items.length; i += perPage) pages.push(items.slice(i, i + perPage));
+    if (!pages.length) pages.push([]);
+
+    pages.forEach(function (pageItems) {
+      var page = document.createElement("div");
+      page.className = "m-page";
+      var grid = document.createElement("div");
+      grid.className = "m-grid";
+      pageItems.forEach(function (it) { grid.appendChild(iconEl(it)); });
+      page.appendChild(grid);
+      pagesEl.appendChild(page);
+    });
+
+    // No dot for a single page — real phones only show the indicator once
+    // there's actually more than one page to page between.
+    if (pages.length > 1) {
+      pages.forEach(function (_, i) {
+        var dot = document.createElement("span");
+        dot.className = "m-dot" + (i === 0 ? " active" : "");
+        dotsEl.appendChild(dot);
+      });
+    }
+
+    if (pages.length > 1) {
+      var dots = dotsEl.querySelectorAll(".m-dot");
+      var raf = null;
+      pagesEl.onscroll = function () {
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = null;
+          var i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+          dots.forEach(function (d, di) { d.classList.toggle("active", di === i); });
+        });
+      };
+    } else {
+      pagesEl.onscroll = null;
+    }
+  }
+
   function buildHome() {
-    var grid = root.querySelector("#m-grid");
-    grid.innerHTML = "";
-    HOME_ITEMS.forEach(function (it) { grid.appendChild(iconEl(it)); });
+    pagesEl = root.querySelector("#m-pages");
+    dotsEl = root.querySelector("#m-dots");
+    buildPages(HOME_ITEMS);
 
     var dock = root.querySelector("#m-dock");
     dock.innerHTML = "";
@@ -544,6 +615,15 @@ window.NomuMobile = (function () {
   // Edge swipes: from the top = Control Center · up from the bottom = App Switcher.
   // Detection happens on pointermove so it still fires if a touch scroll cancels
   // the pointerup (common on real touch devices).
+  // Only let a horizontal drag on the home screen start tracking toward the
+  // App Library once the home pages are scrolled all the way to the last
+  // one (or there's only one) — same as real iOS: swiping left flips
+  // through pages first, and only opens the library once you're past them.
+  function atLastHomePage() {
+    if (!pagesEl) return true;
+    return pagesEl.scrollWidth - pagesEl.clientWidth - pagesEl.scrollLeft < 4;
+  }
+
   function wireGestures() {
     var sY = 0, sX = 0, edge = 0, fired = false; // edge: 1 = top, 2 = bottom
     var hX = 0, hY = 0, hTrack = false;           // horizontal (swipe-left) tracking
@@ -553,7 +633,7 @@ window.NomuMobile = (function () {
       var r = root.getBoundingClientRect();
       if (e.clientY - r.top <= 64) { edge = 1; sY = e.clientY; sX = e.clientX; }
       else if (r.bottom - e.clientY <= 44) { edge = 2; sY = e.clientY; sX = e.clientX; }
-      else if (!activeSheet) { hTrack = true; hX = e.clientX; hY = e.clientY; }
+      else if (!activeSheet && atLastHomePage()) { hTrack = true; hX = e.clientX; hY = e.clientY; }
     });
     root.addEventListener("pointermove", function (e) {
       if (fired) return;
@@ -709,7 +789,8 @@ window.NomuMobile = (function () {
           '<div class="m-home-name">NomuOS</div>' +
           '<div class="m-home-sub">' + esc((window.NomuProfile || {}).name || "") + "</div>" +
         "</div>" +
-        '<div class="m-grid" id="m-grid"></div>' +
+        '<div class="m-pages" id="m-pages"></div>' +
+        '<div class="m-dots" id="m-dots"></div>' +
       "</div>" +
       '<div class="m-dock" id="m-dock"></div>' +
       '<div class="m-sheets" id="m-sheets"></div>' +
@@ -725,12 +806,10 @@ window.NomuMobile = (function () {
       var el = root.querySelector(sel);
       if (el) el.style.touchAction = "none";
     });
-    // The home body allows vertical scroll but hands horizontal drags to us,
-    // so the swipe-left → App Library gesture is detected reliably on touch.
-    [".m-home", ".m-grid"].forEach(function (sel) {
-      var el = root.querySelector(sel);
-      if (el) el.style.touchAction = "pan-y";
-    });
+    // #m-pages owns horizontal paging natively (touch-action: pan-x, plus
+    // scroll-snap in CSS) — real swipe-between-pages, not a scrollbar.
+    var pagesElForTouch = root.querySelector("#m-pages");
+    if (pagesElForTouch) pagesElForTouch.style.touchAction = "pan-x";
     // Transparent full-width strip along the very bottom so the swipe-up gesture
     // works everywhere (even inside an open app), not just on the thin home bar.
     var botStrip = document.createElement("div");
@@ -744,6 +823,15 @@ window.NomuMobile = (function () {
     wireHomeBar();
     // Edge swipes: down from top = Control Center · up from bottom = App Switcher.
     wireGestures();
+
+    // Orientation change / resize can change how many icons fit a page —
+    // re-paginate (debounced; back to page 1, which matches how iOS/Android
+    // both just reset to the start on a layout change like this).
+    var resizeT = null;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(buildHome, 200);
+    });
 
     if (window.NomuScreensaver) NomuScreensaver.init();
   }
