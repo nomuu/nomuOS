@@ -44,7 +44,7 @@ window.NomuProfile = {
       { category: "FRAMEWORKS", skills: ".NET, ASP.NET, Bootstrap" },
       { category: "DATABASES", skills: "SQL Server, MySQL, Postgre" },
       { category: "TOOLS & CLOUD", skills: "Git, VS 2022, Azure (SSO)" },
-      { category: "RPA / AI", skills: "UiPath, OCR, DU, APIs, Kiro CLI" },
+      { category: "RPA / AI", skills: "UiPath, OCR, DU, APIs, Kiro CLI, Claude Code" },
       { category: "SITE ADMIN", skills: "Security, Server Mgmt" },
     ],
     coreStrengths: [
@@ -63,11 +63,11 @@ window.NomuProfile = {
   projects: {
     featured: [
       { name: "Mockify", description: "Prepare for real-world interviews by practicing your own questions on your terms.", url: "https://mockify.imronaldmendoza.com", icon: "fas fa-microphone-alt", tags: ["AI / Career"] },
-      { name: "Weevu", description: "Detect and fix web vulnerabilities before attackers do with instant security scans.", url: "https://imronaldmendoza.com/projects/Weevu", icon: "fas fa-shield-virus", tags: ["CyberSec"] },
-      { name: "GitSet", description: "Universal version control for RC chassis setups with encrypted data exports.", url: "https://imronaldmendoza.com/Projects/Gitset", icon: "fas fa-cogs", tags: ["RC Tech / Hobby"] },
+      { name: "Marsh", description: "Fact-checking buddy that tells you if what's on screen is fake news. Web portal + Android app with on-device OCR.", url: "https://hellomarsh.app/", icon: "fas fa-search", tags: ["AI / Fact-Check", "Mobile"] },
       { name: "Inventrac", description: "Platform for product monitoring and industry regulation compliance.", url: "https://imronaldmendoza.com/", icon: "fas fa-boxes", tags: ["Inventory"] },
       { name: "Photopify", description: "Converts images locally in your browser using hardware acceleration — no uploads.", url: "https://imronaldmendoza.com/Projects/Photopify", icon: "fas fa-camera-retro", tags: ["Privacy"] },
       { name: "Loanatic", description: "Real-time amortization schedules and financial summaries for debt-tracking.", url: "https://imronaldmendoza.com/Projects/loanatic", icon: "fas fa-hand-holding-usd", tags: ["Fintech"] },
+      { name: "Markipify", description: "Diagonal watermark security tool for media protection.", url: "https://imronaldmendoza.com/Projects/Markipify", icon: "fas fa-file-signature", tags: ["Media Security"] },
     ],
     others: [
       { name: "All Codes", description: "Count lines of code in your project files across multiple languages.", url: "https://imronaldmendoza.com/Projects/Allcodes/home.html", icon: "fas fa-file-code" },
@@ -75,7 +75,6 @@ window.NomuProfile = {
       { name: "vsTECH", description: "Full-stack web application built with PHP and Bootstrap.", url: "#", icon: "fas fa-laptop-code" },
       { name: "JSONate", description: "Excel to JSON dataset converter using JavaScript.", url: "https://imronaldmendoza.com/Projects/JSONate", icon: "fas fa-database" },
       { name: "Fast Forward", description: "Responsive logistics landing page with smooth animations.", url: "https://fastforwardfreight.ph", icon: "fas fa-truck-fast" },
-      { name: "Markipify", description: "Diagonal watermark security tool for media protection.", url: "https://imronaldmendoza.com/Projects/Markipify", icon: "fas fa-file-signature" },
       { name: "Time Keeper", description: "Efficiently log and manage time, track hours, and generate reports using VB.NET.", url: "#", icon: "fas fa-clock" },
     ],
   },
