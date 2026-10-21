@@ -69,8 +69,7 @@ window.NomuFS = (function () {
                   type: "folder",
                   children: {
                     "mockify.txt": { type: "file", content: "Mockify — AI / Career\nPractice real-world interviews with your own questions.\nhttps://mockify.imronaldmendoza.com\n" },
-                    "weevu.txt": { type: "file", content: "Weevu — CyberSec\nDetect and fix web vulnerabilities with instant security scans.\n" },
-                    "gitset.txt": { type: "file", content: "GitSet — RC Tech / Hobby\nVersion control for RC chassis setups with encrypted exports.\n" },
+                    "marsh.txt": { type: "file", content: "Marsh — AI / Fact-Check\nFake-news checker: web portal + Android app with on-device OCR.\nhttps://hellomarsh.app/\n" },
                     "photopify.txt": { type: "file", content: "Photopify — Privacy\nLocal in-browser image conversion, no uploads.\n" },
                     "loanatic.txt": { type: "file", content: "Loanatic — Fintech\nReal-time amortization schedules and financial summaries.\n" },
                     "inventrac.txt": { type: "file", content: "Inventrac — Inventory\nProduct monitoring and industry compliance platform.\n" },
@@ -83,7 +82,7 @@ window.NomuFS = (function () {
                     "Frameworks:  .NET, ASP.NET, Bootstrap\n" +
                     "Databases:   SQL Server, MySQL, Postgre\n" +
                     "Tools/Cloud: Git, VS 2022, Azure (SSO)\n" +
-                    "RPA / AI:    UiPath, OCR, DU, APIs, Kiro CLI\n" +
+                    "RPA / AI:    UiPath, OCR, DU, APIs, Kiro CLI, Claude Code\n" +
                     "Site Admin:  Security, Server Mgmt\n",
                 },
                 "contact.txt": {
